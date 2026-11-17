@@ -5,7 +5,7 @@ Express API for the admin portal: identity, the doctor directory, the patient re
 ## Requirements
 
 - Node.js 22 (see `.nvmrc`)
-- A MongoDB database
+- A [MongoDB Atlas](https://www.mongodb.com/atlas) cluster (no local MongoDB install)
 
 ## Setup
 
@@ -14,11 +14,13 @@ cp .env.example .env
 npm install
 ```
 
+In Atlas, create a database user and put the **SRV connection string** in `MONGODB_URI` (see `.env.example`). Allow your IP under **Network Access** for local dev, or use **Allow access from anywhere** (`0.0.0.0/0`) if you only run the API on Cloudflare and seed from your machine occasionally.
+
 Set every value in `.env` before `npm run dev`. `JWT_ACCESS_SECRET` must be at least 32 characters. `FRONTEND_ORIGIN` is the portal origin with no trailing slash. `APP_TIMEZONE` is an IANA name (`UTC` or `Asia/Dhaka`) used for calendar-day bounds.
 
 | Variable                                      | Role                                                          |
 | --------------------------------------------- | ------------------------------------------------------------- |
-| `MONGODB_URI`                                 | Mongo connection string                                       |
+| `MONGODB_URI`                                 | Atlas SRV connection string                                   |
 | `JWT_ACCESS_SECRET`                           | HMAC secret for the 15-minute access token                    |
 | `FRONTEND_ORIGIN`                             | Allowed CORS origin. Refresh and logout require this `Origin` |
 | `PORT`                                        | Listen port. Defaults to `4000`                               |
@@ -52,6 +54,18 @@ Set every value in `.env` before `npm run dev`. `JWT_ACCESS_SECRET` must be at l
 | `npm run seed:reset`   | Clean, then load the full demo dataset |
 
 `GET /api/v1/health` reports whether MongoDB answers. `GET /api/docs` is Swagger UI. `GET /api/docs/openapi.json` is the OpenAPI document generated from the Zod schemas.
+
+## Cloudflare deployment
+
+Production on Cloudflare uses a **Worker** plus **Container** (this Express app in Docker). MongoDB remains external (Atlas). Full steps, secrets, and CI: [docs/DEPLOY-CLOUDFLARE.md](docs/DEPLOY-CLOUDFLARE.md).
+
+```bash
+npx wrangler login
+# set Worker secrets (see deploy doc)
+npm run deploy:cf
+```
+
+**GitHub:** push to `main` runs CI; when checks pass, the workflow deploys to Cloudflare. Add repo secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` — see [docs/DEPLOY-CLOUDFLARE.md](docs/DEPLOY-CLOUDFLARE.md).
 
 ## Technical decisions
 

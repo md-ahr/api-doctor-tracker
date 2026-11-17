@@ -1,0 +1,14 @@
+node_modules
+dist
+coverage
+.env
+.env.*
+!.env.example
+.git
+.github
+.cursor
+*.md
+tests
+vitest.config.ts
+commitlint.config.js
+lefthook.yml
