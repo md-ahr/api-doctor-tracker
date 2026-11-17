@@ -2,6 +2,15 @@
 
 Express API for the admin portal: identity, the doctor directory, the patient registry, and the dashboard read model. MongoDB is the only database. The web app is a separate repository and talks to this API over HTTP.
 
+## Production
+
+| Endpoint | URL                                                              |
+| -------- | ---------------------------------------------------------------- |
+| Health   | https://doctor-tracker-api.ahr-web-pro.workers.dev/api/v1/health |
+| API docs | https://doctor-tracker-api.ahr-web-pro.workers.dev/api/docs      |
+
+Health reports whether MongoDB answers. API docs is Swagger UI. The OpenAPI document is the same host at `/api/docs/openapi.json`, generated from the Zod schemas.
+
 ## Requirements
 
 - Node.js 22 (see `.nvmrc`)
@@ -53,11 +62,11 @@ Set every value in `.env` before `npm run dev`. `JWT_ACCESS_SECRET` must be at l
 | `npm run seed:clean`   | Remove demo doctors, patients, staff   |
 | `npm run seed:reset`   | Clean, then load the full demo dataset |
 
-`GET /api/v1/health` reports whether MongoDB answers. `GET /api/docs` is Swagger UI. `GET /api/docs/openapi.json` is the OpenAPI document generated from the Zod schemas.
+Locally, `GET /api/v1/health` checks MongoDB, `GET /api/docs` is Swagger UI, and `GET /api/docs/openapi.json` is the OpenAPI document. Production URLs are under [Production](#production).
 
 ## Cloudflare deployment
 
-Production on Cloudflare uses a **Worker** plus **Container** (this Express app in Docker). MongoDB remains external (Atlas). Full steps, secrets, and CI: [docs/DEPLOY-CLOUDFLARE.md](docs/DEPLOY-CLOUDFLARE.md).
+Production on Cloudflare uses a **Worker** plus **Container** (this Express app in Docker). MongoDB remains external (Atlas). Full steps, secrets, and CI: [docs/deploy-cloudflare.md](docs/deploy-cloudflare.md).
 
 ```bash
 npx wrangler login
@@ -65,10 +74,14 @@ npx wrangler login
 npm run deploy:cf
 ```
 
-**GitHub:** push to `main` runs CI; when checks pass, the workflow deploys to Cloudflare. Add repo secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` — see [docs/DEPLOY-CLOUDFLARE.md](docs/DEPLOY-CLOUDFLARE.md).
+**GitHub:** push to `main` runs CI; when checks pass, the workflow deploys to Cloudflare. Add repo secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` — see [docs/deploy-cloudflare.md](docs/deploy-cloudflare.md).
 
 ## Technical decisions
 
-**Server data lives in TanStack Query, not a client store such as Redux.** Doctor and patient screens are a cache of this API. They need request keys, invalidation after a write, and de-duplication of in-flight reads. A client store would copy the same payloads into reducers and still need that cache. Redux fits shared client state. The shared state here is server state. The access token stays in a module variable in the web app. It is not stored in Redux and not written to `localStorage`.
+**Access is a 15-minute HS256 JWT. The session is an opaque refresh token, stored as a hash and rotated on use.** The access token is returned in the JSON body. The refresh token is 32 random bytes, stored only as SHA-256, and set as `dt_refresh` (`HttpOnly`, `Secure`, `SameSite=None`, path `/api/v1/auth`). Refresh revokes the current session before it issues the next one, so a stolen cookie cannot be replayed after the legitimate client refreshes. Login always runs argon2id, including a fixed dummy hash when the email is missing, so timing does not reveal whether the account exists. Refresh and logout reject any `Origin` other than `FRONTEND_ORIGIN`. Login is limited to 10 attempts per 15 minutes.
 
-**Dashboard figures are aggregated when the dashboard is read, not stored as a counter on the doctor.** A counter would make every patient write update two documents. Those writes need a transaction to stay correct, and a missed decrement stays wrong. Counts are computed with indexed `$group` queries, then the service fills missing days and conditions with zero. At the expected size that aggregation is the simpler correct design. A stored counter is worth adding only if this read stops meeting the latency budget.
+**One Zod schema is the runtime check and the published contract.** `validate` parses body, query, and params and puts the result on `res.locals`. Controllers do not parse again. The same schemas are registered with `zod-to-openapi` and served at `/api/docs`. A second, hand-written OpenAPI file would drift from what the server accepts. Services throw `DomainError`. One error handler writes the JSON envelope, so status codes and error codes stay in one place.
+
+**Dashboard figures are computed when the dashboard is read.** A counter on the doctor would make every patient write update two documents. Those writes need a transaction, and a missed decrement stays wrong until someone notices. Counts come from indexed `$group` queries. The service then fills days and conditions that returned no rows with zero, and rejects a window longer than 366 days. A stored counter is worth adding only if this read misses its latency budget. Day bounds use Temporal in `APP_TIMEZONE`, so a `YYYY-MM-DD` window does not follow the container clock.
+
+**Indexes are declared on the models and created explicitly at startup.** `autoIndex` is off. Boot calls `createIndexes()`, not `syncIndexes()`, so a deploy cannot drop an index that application code still queries. Reads return `.lean()` objects. Expired sessions are removed by a TTL index on `expiresAt` rather than a sweeper job.
