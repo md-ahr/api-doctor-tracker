@@ -1,5 +1,7 @@
 import mongoose, { Schema, type Types } from "mongoose";
 
+import { escapeRegex } from "../lib/escape-regex.js";
+
 const doctorSchema = new Schema(
   {
     name: { type: String, required: true },
@@ -89,4 +91,81 @@ export function toDoctor(doc: DoctorRecord): Doctor {
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
+}
+
+const textCollation = { locale: "en", strength: 2 } as const;
+
+const doctorSort = {
+  createdAt: { createdAt: -1, _id: -1 },
+  name: { name: 1, _id: 1 },
+} as const;
+
+export type DoctorSearchQuery = {
+  q?: string;
+  specialization?: string;
+  hospital?: string;
+  createdFrom?: Date;
+  createdTo?: Date;
+  page: number;
+  limit: number;
+  sort: keyof typeof doctorSort;
+};
+
+export async function search(query: DoctorSearchQuery) {
+  const filter: {
+    specialization?: string;
+    hospital?: string;
+    createdAt?: { $gte?: Date; $lte?: Date };
+    $or?: Array<Record<string, { $regex: string; $options: string }>>;
+  } = {};
+
+  if (query.specialization) filter.specialization = query.specialization;
+  if (query.hospital) filter.hospital = query.hospital;
+  if (query.createdFrom || query.createdTo) {
+    filter.createdAt = {};
+    if (query.createdFrom) filter.createdAt.$gte = query.createdFrom;
+    if (query.createdTo) filter.createdAt.$lte = query.createdTo;
+  }
+  if (query.q) {
+    const pattern = escapeRegex(query.q);
+    filter.$or = ["name", "specialization", "hospital", "email", "phone"].map((field) => ({
+      [field]: { $regex: pattern, $options: "i" },
+    }));
+  }
+
+  const useCollation = Boolean(query.specialization || query.hospital);
+  const skip = (query.page - 1) * query.limit;
+  let itemsQuery = DoctorModel.find(filter)
+    .sort(doctorSort[query.sort])
+    .skip(skip)
+    .limit(query.limit);
+  let countQuery = DoctorModel.countDocuments(filter);
+  if (useCollation) {
+    itemsQuery = itemsQuery.collation(textCollation);
+    countQuery = countQuery.collation(textCollation);
+  }
+
+  const [docs, total] = await Promise.all([itemsQuery.lean<DoctorRecord[]>(), countQuery]);
+  return {
+    items: docs.map((doc) => toDoctor(doc)),
+    page: query.page,
+    limit: query.limit,
+    total,
+  };
+}
+
+export async function facets() {
+  const [specializations, hospitals] = await Promise.all([
+    distinctValues("specialization"),
+    distinctValues("hospital"),
+  ]);
+  return { specializations, hospitals };
+}
+
+async function distinctValues(field: "specialization" | "hospital"): Promise<string[]> {
+  const rows = await DoctorModel.aggregate<{ _id: string }>([
+    { $group: { _id: `$${field}` } },
+    { $sort: { _id: 1 } },
+  ]).collation(textCollation);
+  return rows.map((row) => row._id);
 }
