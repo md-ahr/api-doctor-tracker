@@ -1,25 +1,28 @@
-# linux/amd64 image for Cloudflare Containers
-FROM --platform=linux/amd64 node:22-bookworm-slim AS build
+# Production image for Cloudflare Containers (linux/amd64 on the CI runner).
+# Do not set --platform on FROM: the Cloudflare builder rejects a constant platform flag.
+FROM node:22-bookworm-slim AS build
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+# Full install so native deps (argon2) compile and the TypeScript build can run.
 RUN npm ci
 
 COPY tsconfig.json tsconfig.build.json ./
 COPY src ./src
-RUN npm run build
+# Drop devDependencies here. A second `npm ci --omit=dev` runs `prepare`
+# (lefthook), which is not installed when devDependencies are omitted.
+RUN npm run build && npm prune --omit=dev
 
-FROM --platform=linux/amd64 node:22-bookworm-slim AS run
+FROM node:22-bookworm-slim AS run
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=8080
 
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
-
+COPY --from=build /app/package.json ./
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 
 EXPOSE 8080

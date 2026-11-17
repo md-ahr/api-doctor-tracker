@@ -20,7 +20,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "lefthook install",
+    "prepare": "lefthook install || true",
     "dev:cf": "wrangler dev",
     "deploy:cf": "wrangler deploy",
     "deploy:cf:dry-run": "wrangler deploy --dry-run",
