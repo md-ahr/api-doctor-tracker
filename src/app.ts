@@ -9,6 +9,7 @@ import { sendFailure } from "./lib/response.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requestId } from "./middleware/request-id.js";
 import { authRouter } from "./routes/auth.routes.js";
+import { dashboardRouter } from "./routes/dashboard.routes.js";
 import { doctorRouter } from "./routes/doctor.routes.js";
 import { healthRouter } from "./routes/health.routes.js";
 import { patientRouter } from "./routes/patient.routes.js";
@@ -40,6 +41,7 @@ export function createApp() {
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/doctors", doctorRouter);
   app.use("/api/v1/patients", patientRouter);
+  app.use("/api/v1/dashboard", dashboardRouter);
   app.use((_req, res) => {
     sendFailure(res, 404, "Route not found", "VALIDATION_ERROR", []);
   });
