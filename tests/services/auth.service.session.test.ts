@@ -54,8 +54,8 @@ describe("auth session", () => {
       createHash("sha256").update("old-refresh-token").digest("hex"),
       expect.any(Date),
     );
-    expect(revoke.mock.invocationCallOrder[0]).toBeLessThan(
-      createSession.mock.invocationCallOrder[0] ?? 0,
+    expect(vi.mocked(revoke).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(createSession).mock.invocationCallOrder[0] ?? 0,
     );
     expect(revoke).toHaveBeenCalledWith(liveSession.id, expect.any(Date));
     expect(result.refreshToken).toMatch(/^[a-f0-9]{64}$/);
