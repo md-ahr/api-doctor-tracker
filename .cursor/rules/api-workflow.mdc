@@ -1,0 +1,18 @@
+---
+description: Doctor Tracker API workflow. One task at a time against the LLD.
+alwaysApply: true
+---
+
+# API workflow
+
+Work from the contract, in order.
+
+1. Read the lowest unchecked task in `docs/backend-tasks.md` (or `../docs/backend-tasks.md`).
+2. Change only the files that task names.
+3. Add the listed unit test first when the task gives concrete cases.
+4. From the API root run, in order, every script that exists: `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
+5. Commit with `docs/commit-guidelines.md` only after that gate is green: `type(scope): subject`, subject under 50 characters. One task, one commit. Do not start the next task.
+
+Load `implement-api-task` before feature work. Load `stay-on-contract` when a field, status, message, or library call is not already written in the task or the LLD. Do not invent it.
+
+Stack: Node 22, Express, TypeScript strict, NodeNext, Mongoose, Zod, argon2, jsonwebtoken, pino, Temporal, Vitest. Verify with `npm test` and `npm run typecheck` from the API root.

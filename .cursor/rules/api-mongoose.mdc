@@ -1,0 +1,22 @@
+---
+description: Mongoose schemas, indexes, lean queries, and soft delete
+globs: "{src,api/src}/{models,db}/**/*.ts"
+alwaysApply: false
+---
+
+# Mongoose
+
+`autoIndex: false`. Startup calls `createIndexes()` and does not call `syncIndexes()`. Model functions return `.lean()` plain objects, or `null`. They do not throw `DOCTOR_NOT_FOUND` or `PATIENT_NOT_FOUND`.
+
+Patient reads include `deletedAt: null`. The public patient resource has no `deletedAt`. Indexes on patients are partial on `{ deletedAt: null }`.
+
+| Collection | Indexes |
+| --- | --- |
+| admins | unique `{ email: 1 }` |
+| sessions | unique `{ tokenHash: 1 }`, TTL `{ expiresAt: 1 }` with `expireAfterSeconds: 0`, `{ adminId: 1 }` |
+| doctors | unique `{ email: 1 }`; `{ createdAt: -1, _id: -1 }`; `{ specialization: 1, createdAt: -1 }` and `{ hospital: 1, createdAt: -1 }`, both with collation `{ locale: "en", strength: 2 }` |
+| patients | `{ doctorId: 1, registeredAt: -1, _id: -1 }`, `{ registeredAt: -1, _id: -1 }`, `{ condition: 1, registeredAt: -1 }`, each partial `{ deletedAt: null }` |
+
+Pass the collation only on queries that filter specialization or hospital. Escape search text in the service with `escapeRegex` before it becomes a regex. Store emails lowercase. List queries use `find` + `countDocuments` together, with `skip` / `limit`. Page size stays at most 50.
+
+Explain-plan checks for the three indexed patient shapes must show `IXSCAN`.

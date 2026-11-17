@@ -1,0 +1,19 @@
+---
+description: Admin auth, argon2, JWT, and the refresh cookie
+globs: "{src,api/src}/{lib/password.ts,lib/tokens.ts,services/auth.service.ts,routes/auth.routes.ts,models/admin.model.ts,models/session.model.ts,seed.ts}"
+alwaysApply: false
+---
+
+# Auth
+
+Access token: HS256 JWT, 15 minutes (`expiresIn: 900`), secret `JWT_ACCESS_SECRET` (at least 32 characters). Claims are `sub`, `email`, `name`, and `role`. The refresh token is not inside the JWT.
+
+Refresh cookie `dt_refresh`: 32 random bytes, hex. Store only the SHA-256 hex digest. Cookie flags: `HttpOnly`, `Secure`, `SameSite=None`, `Path=/api/v1/auth`, `Max-Age=604800`. The route sets and clears the cookie. The service returns the opaque token and does not touch `res`.
+
+Login: normalize email. If the admin is missing, verify against a dummy hash, then throw `INVALID_CREDENTIALS`. Login rate limit is 10 requests per 15 minutes per IP, on `POST /auth/login` only.
+
+Refresh requires the cookie and `Origin === FRONTEND_ORIGIN`. Revoke the current session, then create the next one. Logout revokes a live session when one exists and still returns success.
+
+`requireAdmin` verifies the bearer token, rejects any role other than `admin` with `FORBIDDEN`, and sets `req.admin`. It sits on doctor, patient, and dashboard routers, and on `GET /auth/me`.
+
+Do not log passwords, hashes, refresh tokens, or access tokens. Seed inserts the admin only when the email is missing.

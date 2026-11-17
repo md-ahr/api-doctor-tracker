@@ -1,0 +1,34 @@
+---
+description: Stop guessing and generic filler in the Doctor Tracker API
+alwaysApply: true
+---
+
+# Contract over invention
+
+If `docs/lld.md`, `docs/backend-structure.md`, or the current task does not state the behavior, stop and name the missing line. Do not pick a plausible field, status, message, index, or package.
+
+Confirm an unfamiliar Express, Mongoose, Zod, Vitest, argon2, jsonwebtoken, or pino signature with the Context7 MCP before writing the call.
+
+## Allowed results
+
+`DomainError` codes: `VALIDATION_ERROR`, `INVALID_CREDENTIALS`, `UNAUTHENTICATED`, `FORBIDDEN`, `DOCTOR_NOT_FOUND`, `PATIENT_NOT_FOUND`, `EMAIL_IN_USE`, `RATE_LIMITED`, `INTERNAL`.
+
+HTTP statuses: `200`, `201`, `400`, `401`, `403`, `404`, `409`, `429`, `500`. Health uses `503` only when the database ping fails. Delete and logout are `200`, not `204`. `INTERNAL` from `DomainError` stays `500`.
+
+Success `message` text comes from the task or the LLD.
+
+## Filler that does not ship
+
+- `any`, `as any`, `as unknown as`, `@ts-ignore`, `@ts-expect-error`, `eslint-disable`
+- `TODO`, `FIXME`, `not implemented`, `lorem ipsum`, `coming soon`
+- An empty `catch`, a swallowed error, or a default return that hides a missing rule
+- A new layer, helper, or endpoint the task did not name
+- Comments that restate the next line. A comment is only for a constraint the code cannot show.
+
+```typescript
+// Bad: guessed code and a type escape
+throw new DomainError("NOT_FOUND" as any);
+
+// Good: the code the LLD names
+throw new DomainError("DOCTOR_NOT_FOUND");
+```

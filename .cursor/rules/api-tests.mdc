@@ -1,0 +1,22 @@
+---
+description: Vitest layers, explain plans, and Conventional Commits for the API
+globs: "{tests,api/tests}/**/*.ts"
+alwaysApply: false
+---
+
+# Tests and commits
+
+| Layer | Test |
+| --- | --- |
+| `lib`, `config/env` | pure functions, env stub, no database |
+| `schemas` | `safeParse` fixtures |
+| `services` | `vi.mock` the model module. Assert `DomainError` codes |
+| `middleware` | mock `req`, `res`, `next` |
+| `models` | `mongodb-memory-server`. One task at a time |
+| HTTP | supertest against MongoDB in Phase 12 |
+
+Service tests cover duplicate email, unknown doctor, soft delete, zero-filled dashboard days, and the dummy-hash login path. Patient model tests assert `IXSCAN` on doctor scope, condition, and registration date.
+
+`NODE_ENV=test` is set in `tests/setup.ts`. Logging in tests still goes through pino. `console.*` fails lint.
+
+Commit from the API repository. `type(scope): subject` with subject under 50 characters. Scopes: `config`, `lib`, `middleware`, `db`, `auth`, `doctors`, `patients`, `dashboard`, `docs`, `health`. A task's commit waits until its unit tests pass. Do not use `feat` for a failing stub.

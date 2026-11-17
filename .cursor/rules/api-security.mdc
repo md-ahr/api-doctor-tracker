@@ -1,0 +1,20 @@
+---
+description: CSRF, XSS, SSRF, injection, and secret handling for the API
+alwaysApply: true
+---
+
+# API security
+
+The browser is untrusted. Only this process connects to MongoDB. Load `api-security` before changing auth, cookies, queries, or anything that calls the network.
+
+| Risk | Required control |
+| --- | --- |
+| CSRF | `POST /auth/refresh` and `POST /auth/logout` require `Origin === FRONTEND_ORIGIN`. Cookie is `HttpOnly`, `Secure`, `SameSite=None`, `Path=/api/v1/auth` |
+| XSS | JSON only. Do not build HTML from request data. Error bodies omit stacks |
+| SSRF | Do not fetch a URL that came from the request. No `fetch`, axios, or `got` in `src` |
+| NoSQL injection | Zod allow-list, then an explicit filter. `escapeRegex` on search. No `$where`. Do not pass `req.body` to `find` |
+| Auth | `requireAdmin`. Verify JWT with `algorithms: ["HS256"]`. Store the refresh token as a SHA-256 hash. Unknown emails still run a dummy hash |
+| Secrets | `passwordHash`, `tokenHash`, refresh tokens, and access tokens stay out of JSON and logs |
+| Abuse | Login rate limit. JSON limit 16 KB. `limit` at most 50 |
+
+Do not add a file upload, an open redirect, or a proxy to a client-supplied URL. Helmet and the CORS origin stay on.

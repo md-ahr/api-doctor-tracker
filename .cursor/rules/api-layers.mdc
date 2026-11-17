@@ -1,0 +1,34 @@
+---
+description: Route, service, and model boundaries for the Express API
+globs: "{src,api/src}/**/*.ts"
+alwaysApply: false
+---
+
+# Layers
+
+```text
+middleware → route → service → model → MongoDB
+```
+
+| File | May import | Must not import |
+| --- | --- | --- |
+| `routes/*` | matching service, schemas, middleware, `lib/response` | models |
+| `auth.service.ts` | `admin.model`, `session.model`, `lib` | doctor, patient, or dashboard files |
+| `doctor.service.ts` | `doctor.model`, `patient.model` count functions, `lib` | `patient.service`, auth |
+| `patient.service.ts` | `patient.model`, `doctor.model.findById` and `findByIds`, `lib` | `doctor.service`, auth |
+| `dashboard.service.ts` | doctor and patient model query functions, `lib` | other services, Express |
+| `models/*` | `mongoose` | services, routes, Express |
+| `middleware/require-admin.ts` | `lib/tokens`, `lib/errors` | models |
+
+`GET /doctors/:doctorId/patients` is the one route that calls `patient.service` from the doctor router. The doctor service does not import the patient service.
+
+A handler is validated input, one service call, one response helper. It does not catch `DomainError`. `async-handler` forwards to `error-handler`.
+
+```typescript
+export const create = asyncHandler(async (req, res) => {
+  const doctor = await createDoctor(req.body);
+  sendData(res, 201, "Doctor created successfully", doctor);
+});
+```
+
+Relative imports use the `.js` suffix. Named exports. Services and models are async functions, not classes. `app.ts` mounts routers and does not inject repositories.
