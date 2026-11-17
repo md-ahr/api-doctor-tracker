@@ -2,6 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../src/db/mongoose.js", () => ({
   connectDatabase: vi.fn(),
+  disconnectDatabase: vi.fn(),
+}));
+
+vi.mock("../src/lib/logger.js", () => ({
+  logger: {
+    info: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 vi.mock("../src/models/user.model.js", () => ({
@@ -14,14 +22,16 @@ vi.mock("../src/lib/password.js", () => ({
 }));
 
 import { env } from "../src/config/env.js";
+import { connectDatabase, disconnectDatabase } from "../src/db/mongoose.js";
+import { logger } from "../src/lib/logger.js";
 import { hashPassword } from "../src/lib/password.js";
-import { connectDatabase } from "../src/db/mongoose.js";
 import { create, findByEmail } from "../src/models/user.model.js";
-import { seedAdmin } from "../src/seed.js";
+import { runSeed, seedAdmin } from "../src/seed.js";
 
 describe("seedAdmin", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.exitCode = undefined;
     vi.mocked(hashPassword).mockResolvedValue("hashed-password");
     vi.mocked(create).mockResolvedValue({
       id: "665f1c0a2b3c4d5e6f708192",
@@ -51,5 +61,25 @@ describe("seedAdmin", () => {
       passwordHash: "hashed-password",
       role: "admin",
     });
+  });
+
+  it("closes the database connection after a successful seed", async () => {
+    vi.mocked(findByEmail).mockResolvedValue(null);
+
+    await runSeed();
+
+    expect(logger.info).toHaveBeenCalledWith("Admin seed complete");
+    expect(disconnectDatabase).toHaveBeenCalledOnce();
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("closes the database connection when seeding fails", async () => {
+    vi.mocked(connectDatabase).mockRejectedValueOnce(new Error("unreachable"));
+
+    await runSeed();
+
+    expect(logger.error).toHaveBeenCalledWith({ err: expect.any(Error) }, "Admin seed failed");
+    expect(disconnectDatabase).toHaveBeenCalledOnce();
+    expect(process.exitCode).toBe(1);
   });
 });

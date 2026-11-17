@@ -10,6 +10,10 @@ export async function connectDatabase(): Promise<void> {
   await mongoose.connect(env.MONGODB_URI, { autoIndex: false });
 }
 
+export async function disconnectDatabase(): Promise<void> {
+  await mongoose.disconnect();
+}
+
 export async function createIndexes(): Promise<void> {
   await Promise.all([
     AdminModel.createIndexes(),
