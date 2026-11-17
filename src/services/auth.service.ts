@@ -15,7 +15,12 @@ function hashRefreshToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-async function openSession(admin: { id: string; email: string; name: string; role: "admin" }) {
+async function openSession(admin: {
+  id: string;
+  email: string;
+  name: string;
+  role: "admin" | "user";
+}) {
   const refreshToken = randomBytes(32).toString("hex");
   await sessionModel.create({
     adminId: admin.id,

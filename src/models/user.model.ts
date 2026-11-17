@@ -5,7 +5,7 @@ const adminSchema = new Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
-    role: { type: String, required: true, enum: ["admin"] },
+    role: { type: String, required: true, enum: ["admin", "user"] },
   },
   { timestamps: true, autoIndex: false, collection: "users" },
 );
@@ -14,18 +14,20 @@ adminSchema.index({ email: 1 }, { unique: true });
 
 export const AdminModel = mongoose.model("Admin", adminSchema);
 
+export type UserRole = "admin" | "user";
+
 export async function create(input: {
   name: string;
   email: string;
   passwordHash: string;
-  role: "admin";
+  role: UserRole;
 }) {
   const doc = await AdminModel.create(input);
   return {
     id: doc._id.toString(),
     name: doc.name,
     email: doc.email,
-    role: "admin" as const,
+    role: doc.role as UserRole,
   };
 }
 
@@ -37,7 +39,7 @@ export async function findById(id: string) {
     id: doc._id.toString(),
     name: doc.name,
     email: doc.email,
-    role: "admin" as const,
+    role: doc.role as UserRole,
     passwordHash: doc.passwordHash,
   };
 }
@@ -49,7 +51,7 @@ export async function findByEmail(email: string) {
     id: doc._id.toString(),
     name: doc.name,
     email: doc.email,
-    role: "admin" as const,
+    role: doc.role as UserRole,
     passwordHash: doc.passwordHash,
   };
 }

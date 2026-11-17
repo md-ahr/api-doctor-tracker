@@ -8,7 +8,7 @@ export function issueAccessToken(admin: {
   id: string;
   email: string;
   name: string;
-  role: "admin";
+  role: "admin" | "user";
 }) {
   const token = jwt.sign(
     { email: admin.email, name: admin.name, role: admin.role },

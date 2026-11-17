@@ -5,6 +5,20 @@ import { connectDatabase, disconnectDatabase } from "./db/mongoose.js";
 import { logger } from "./lib/logger.js";
 import { hashPassword } from "./lib/password.js";
 import * as adminModel from "./models/user.model.js";
+import { cleanDemoData } from "./seed/clean.js";
+import { seedDemoClinic } from "./seed/demo.js";
+
+export type SeedOptions = {
+  all?: boolean;
+  clean?: boolean;
+};
+
+export function parseSeedArgv(argv: string[]): SeedOptions {
+  return {
+    all: argv.includes("--all"),
+    clean: argv.includes("--clean"),
+  };
+}
 
 export async function seedAdmin(): Promise<void> {
   const email = env.ADMIN_EMAIL;
@@ -26,13 +40,54 @@ export async function seedAdmin(): Promise<void> {
   }
 }
 
-export async function runSeed(): Promise<void> {
+export async function runSeed(options: SeedOptions = {}): Promise<void> {
+  const wantsDemo = options.all === true;
+  const wantsClean = options.clean === true;
+
+  if (!wantsDemo && !wantsClean) {
+    try {
+      logger.info("Connecting to the database");
+      await seedAdmin();
+      logger.info("Admin seed complete");
+    } catch (error) {
+      logger.error({ err: error }, "Admin seed failed");
+      process.exitCode = 1;
+    } finally {
+      try {
+        await disconnectDatabase();
+      } catch (error) {
+        logger.error({ err: error }, "Failed to close the database connection");
+        process.exitCode = 1;
+      }
+    }
+    return;
+  }
+
   try {
     logger.info("Connecting to the database");
-    await seedAdmin();
-    logger.info("Admin seed complete");
+    await connectDatabase();
+
+    if (wantsClean) {
+      logger.info("Clearing demo data");
+      await cleanDemoData();
+      logger.info("Demo data cleared");
+    }
+
+    if (wantsDemo) {
+      await seedAdmin();
+      logger.info("Seeding clinic demo data");
+      const summary = await seedDemoClinic();
+      logger.info(
+        {
+          staffInserted: summary.staffInserted,
+          doctorsInserted: summary.doctorsInserted,
+          patientsInserted: summary.patientsInserted,
+        },
+        "Clinic demo seed complete",
+      );
+    }
   } catch (error) {
-    logger.error({ err: error }, "Admin seed failed");
+    logger.error({ err: error }, "Seed failed");
     process.exitCode = 1;
   } finally {
     try {
@@ -46,5 +101,6 @@ export async function runSeed(): Promise<void> {
 
 const entry = process.argv[1];
 if (entry && import.meta.url === pathToFileURL(entry).href) {
-  await runSeed();
+  const options = parseSeedArgv(process.argv.slice(2));
+  await runSeed(options);
 }

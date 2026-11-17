@@ -29,18 +29,27 @@ Set every value in `.env` before `npm run dev`. `JWT_ACCESS_SECRET` must be at l
 
 `npm run seed` inserts that admin when the email is missing. Running it again does not create a second admin.
 
+`npm run seed:all` adds demo clinic data: 9 staff users (`role: user`, password `12345678`), 100 doctors, and 1,000 patients with Bangladesh-style names, hospitals, and phone numbers. It top-ups missing rows when counts are below those targets.
+
+`npm run seed:clean` removes demo doctors, patients, sessions, and staff users. The configured admin account is kept when `ADMIN_EMAIL` is set.
+
+`npm run seed:reset` runs clean, then `seed:all` (admin plus the full demo dataset).
+
 ## Scripts
 
-| Script                 | What it does                        |
-| ---------------------- | ----------------------------------- |
-| `npm run dev`          | Start the API with a reload watcher |
-| `npm start`            | Run the compiled server in `dist/`  |
-| `npm run build`        | Compile `src/` to `dist/`           |
-| `npm run typecheck`    | Typecheck `src/` and `tests/`       |
-| `npm test`             | Run the Vitest suite                |
-| `npm run lint`         | ESLint with zero warnings           |
-| `npm run format:check` | Check Prettier                      |
-| `npm run seed`         | Insert the admin when missing       |
+| Script                 | What it does                           |
+| ---------------------- | -------------------------------------- |
+| `npm run dev`          | Start the API with a reload watcher    |
+| `npm start`            | Run the compiled server in `dist/`     |
+| `npm run build`        | Compile `src/` to `dist/`              |
+| `npm run typecheck`    | Typecheck `src/` and `tests/`          |
+| `npm test`             | Run the Vitest suite                   |
+| `npm run lint`         | ESLint with zero warnings              |
+| `npm run format:check` | Check Prettier                         |
+| `npm run seed`         | Insert the admin when missing          |
+| `npm run seed:all`     | Admin (if missing) + demo clinic data  |
+| `npm run seed:clean`   | Remove demo doctors, patients, staff   |
+| `npm run seed:reset`   | Clean, then load the full demo dataset |
 
 `GET /api/v1/health` reports whether MongoDB answers. `GET /api/docs` is Swagger UI. `GET /api/docs/openapi.json` is the OpenAPI document generated from the Zod schemas.
 
