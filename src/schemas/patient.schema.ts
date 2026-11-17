@@ -54,6 +54,10 @@ export const createPatientBodySchema = z.object({
   registeredAt: z.string().date().optional(),
 });
 
+export const createAssignedPatientBodySchema = createPatientBodySchema.extend({
+  doctorId: objectId,
+});
+
 export const updatePatientBodySchema = z
   .object({
     fullName: z.string().trim().min(1).max(120).optional(),
@@ -82,8 +86,13 @@ export const patientListQuerySchema = z.object({
   sort: z.enum(["registeredAt", "fullName"]).default("registeredAt"),
 });
 
+export const doctorPatientListQuerySchema = patientListQuerySchema.extend({
+  doctorId: z.never().optional(),
+});
+
 export const patientIdParamsSchema = z.object({ patientId: objectId });
 
 export type CreatePatientBody = z.infer<typeof createPatientBodySchema>;
+export type CreateAssignedPatientBody = z.infer<typeof createAssignedPatientBodySchema>;
 export type UpdatePatientBody = z.infer<typeof updatePatientBodySchema>;
 export type PatientListQuery = z.infer<typeof patientListQuerySchema>;

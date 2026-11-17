@@ -6,7 +6,9 @@ import type {
   DoctorListQuery,
   UpdateDoctorBody,
 } from "../schemas/doctor.schema.js";
+import type { CreatePatientBody, PatientListQuery } from "../schemas/patient.schema.js";
 import * as doctorService from "../services/doctor.service.js";
+import * as patientService from "../services/patient.service.js";
 
 export async function create(_req: Request, res: Response): Promise<void> {
   const body = res.locals.body as CreateDoctorBody;
@@ -41,6 +43,25 @@ export async function update(_req: Request, res: Response): Promise<void> {
   const body = res.locals.body as UpdateDoctorBody;
   const doctor = await doctorService.updateDoctor(doctorId, body);
   sendData(res, 200, "Doctor updated successfully", toDoctorResource(doctor));
+}
+
+export async function listPatients(_req: Request, res: Response): Promise<void> {
+  const { doctorId } = res.locals.params as { doctorId: string };
+  const query = res.locals.query as Omit<PatientListQuery, "doctorId">;
+  const page = await patientService.listDoctorPatients(doctorId, query);
+  sendList(
+    res,
+    "Patients retrieved successfully",
+    page.items,
+    pageMeta(page.page, page.limit, page.total),
+  );
+}
+
+export async function createPatient(_req: Request, res: Response): Promise<void> {
+  const { doctorId } = res.locals.params as { doctorId: string };
+  const body = res.locals.body as CreatePatientBody;
+  const patient = await patientService.createPatient(doctorId, body);
+  sendData(res, 201, "Patient created successfully", patient);
 }
 
 function toDoctorResource(doctor: {

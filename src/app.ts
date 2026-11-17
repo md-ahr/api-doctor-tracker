@@ -11,6 +11,7 @@ import { requestId } from "./middleware/request-id.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { doctorRouter } from "./routes/doctor.routes.js";
 import { healthRouter } from "./routes/health.routes.js";
+import { patientRouter } from "./routes/patient.routes.js";
 
 export function createApp() {
   const app = express();
@@ -38,6 +39,7 @@ export function createApp() {
   app.use("/api/v1/health", healthRouter);
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/doctors", doctorRouter);
+  app.use("/api/v1/patients", patientRouter);
   app.use((_req, res) => {
     sendFailure(res, 404, "Route not found", "VALIDATION_ERROR", []);
   });
