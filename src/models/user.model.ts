@@ -7,7 +7,7 @@ const adminSchema = new Schema(
     passwordHash: { type: String, required: true },
     role: { type: String, required: true, enum: ["admin"] },
   },
-  { timestamps: true, autoIndex: false },
+  { timestamps: true, autoIndex: false, collection: "users" },
 );
 
 adminSchema.index({ email: 1 }, { unique: true });

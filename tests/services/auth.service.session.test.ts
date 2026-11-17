@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../src/models/admin.model.js", () => ({
+vi.mock("../../src/models/user.model.js", () => ({
   findById: vi.fn(),
 }));
 
@@ -13,7 +13,7 @@ vi.mock("../../src/models/session.model.js", () => ({
 
 import { DomainError } from "../../src/lib/errors.js";
 import { verifyAccessToken } from "../../src/lib/tokens.js";
-import { findById } from "../../src/models/admin.model.js";
+import { findById } from "../../src/models/user.model.js";
 import { create as createSession, findLiveByHash, revoke } from "../../src/models/session.model.js";
 import { getMe, logout, refreshSession } from "../../src/services/auth.service.js";
 

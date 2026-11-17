@@ -7,7 +7,7 @@ import { createApp } from "../../src/app.js";
 import { createIndexes } from "../../src/db/mongoose.js";
 import { env } from "../../src/config/env.js";
 import { hashPassword } from "../../src/lib/password.js";
-import { create as createAdmin } from "../../src/models/admin.model.js";
+import { create as createAdmin } from "../../src/models/user.model.js";
 
 const password = "correct horse";
 

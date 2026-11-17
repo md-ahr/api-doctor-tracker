@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { isDuplicateKeyError } from "../../src/lib/errors.js";
-import { AdminModel, create, findByEmail, findById } from "../../src/models/admin.model.js";
+import { AdminModel, create, findByEmail, findById } from "../../src/models/user.model.js";
 
 const admin = {
   name: "Ada Lovelace",
@@ -28,6 +28,10 @@ describe("admin model", () => {
 
   beforeEach(async () => {
     await AdminModel.deleteMany({});
+  });
+
+  it("stores accounts in the users collection", () => {
+    expect(AdminModel.collection.name).toBe("users");
   });
 
   it("stores the email in lowercase", async () => {

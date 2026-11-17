@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 import { env } from "../config/env.js";
-import { AdminModel } from "../models/admin.model.js";
+import { AdminModel } from "../models/user.model.js";
 import { DoctorModel } from "../models/doctor.model.js";
 import { PatientModel } from "../models/patient.model.js";
 import { SessionModel } from "../models/session.model.js";

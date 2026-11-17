@@ -1,6 +1,6 @@
 ---
 description: Admin auth, argon2, JWT, and the refresh cookie
-globs: "{src,api/src}/{lib/password.ts,lib/tokens.ts,services/auth.service.ts,controllers/auth.controller.ts,routes/auth.routes.ts,models/admin.model.ts,models/session.model.ts,seed.ts}"
+globs: "{src,api/src}/{lib/password.ts,lib/tokens.ts,services/auth.service.ts,controllers/auth.controller.ts,routes/auth.routes.ts,models/user.model.ts,models/session.model.ts,seed.ts}"
 alwaysApply: false
 ---
 

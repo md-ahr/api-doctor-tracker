@@ -4,7 +4,7 @@ vi.mock("../src/db/mongoose.js", () => ({
   connectDatabase: vi.fn(),
 }));
 
-vi.mock("../src/models/admin.model.js", () => ({
+vi.mock("../src/models/user.model.js", () => ({
   findByEmail: vi.fn(),
   create: vi.fn(),
 }));
@@ -16,7 +16,7 @@ vi.mock("../src/lib/password.js", () => ({
 import { env } from "../src/config/env.js";
 import { hashPassword } from "../src/lib/password.js";
 import { connectDatabase } from "../src/db/mongoose.js";
-import { create, findByEmail } from "../src/models/admin.model.js";
+import { create, findByEmail } from "../src/models/user.model.js";
 import { seedAdmin } from "../src/seed.js";
 
 describe("seedAdmin", () => {

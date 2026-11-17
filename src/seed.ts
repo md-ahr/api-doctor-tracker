@@ -3,7 +3,7 @@ import { pathToFileURL } from "node:url";
 import { env } from "./config/env.js";
 import { connectDatabase } from "./db/mongoose.js";
 import { hashPassword } from "./lib/password.js";
-import * as adminModel from "./models/admin.model.js";
+import * as adminModel from "./models/user.model.js";
 
 export async function seedAdmin(): Promise<void> {
   const email = env.ADMIN_EMAIL;

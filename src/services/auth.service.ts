@@ -3,7 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { DomainError } from "../lib/errors.js";
 import { verifyPassword } from "../lib/password.js";
 import { issueAccessToken } from "../lib/tokens.js";
-import * as adminModel from "../models/admin.model.js";
+import * as adminModel from "../models/user.model.js";
 import * as sessionModel from "../models/session.model.js";
 
 const DUMMY_PASSWORD_HASH =

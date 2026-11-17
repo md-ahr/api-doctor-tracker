@@ -14,7 +14,7 @@ middleware → route → controller → service → model → MongoDB
 | --- | --- | --- |
 | `routes/*` | matching controller, schemas, middleware | models, services |
 | `controllers/*` | matching service, `lib/response`, `lib/errors`, `config/env` | models |
-| `auth.service.ts` | `admin.model`, `session.model`, `lib` | doctor, patient, or dashboard files, Express |
+| `auth.service.ts` | `user.model`, `session.model`, `lib` | doctor, patient, or dashboard files, Express |
 | `doctor.service.ts` | `doctor.model`, `patient.model` count functions, `lib` | `patient.service`, auth, Express |
 | `patient.service.ts` | `patient.model`, `doctor.model.findById` and `findByIds`, `lib` | `doctor.service`, auth, Express |
 | `dashboard.service.ts` | doctor and patient model query functions, `lib` | other services, Express |
