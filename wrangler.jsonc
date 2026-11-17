@@ -6,11 +6,11 @@
   "observability": {
     "enabled": true,
     "logs": {
-      "enabled": true
+      "enabled": true,
     },
     "traces": {
-      "enabled": true
-    }
+      "enabled": true,
+    },
   },
   "containers": [
     {
@@ -18,23 +18,23 @@
       "scheduling_policy": "durable_object",
       "images": {
         "base": {
-          "dockerfile": "./Dockerfile"
-        }
-      }
-    }
+          "dockerfile": "./Dockerfile",
+        },
+      },
+    },
   ],
   "durable_objects": {
     "bindings": [
       {
         "name": "API_CONTAINER",
-        "class_name": "ApiContainer"
-      }
-    ]
+        "class_name": "ApiContainer",
+      },
+    ],
   },
   "exports": {
     "ApiContainer": {
       "type": "durable-object",
-      "storage": "sqlite"
-    }
-  }
+      "storage": "sqlite",
+    },
+  },
 }
