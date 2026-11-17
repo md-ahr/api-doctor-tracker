@@ -15,6 +15,11 @@ const doctorSchema = new Schema(
 
 doctorSchema.index({ email: 1 }, { unique: true });
 doctorSchema.index({ createdAt: -1, _id: -1 });
+doctorSchema.index(
+  { specialization: 1, createdAt: -1 },
+  { collation: { locale: "en", strength: 2 } },
+);
+doctorSchema.index({ hospital: 1, createdAt: -1 }, { collation: { locale: "en", strength: 2 } });
 
 export const DoctorModel = mongoose.model("Doctor", doctorSchema);
 

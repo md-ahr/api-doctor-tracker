@@ -33,5 +33,22 @@ describe("mongoose bootstrap", () => {
 
   it("createIndexes resolves without error", async () => {
     await expect(createIndexes()).resolves.toBeUndefined();
+
+    const { DoctorModel } = await import("../../src/models/doctor.model.js");
+    const indexes = await DoctorModel.listIndexes();
+    expect(indexes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: { email: 1 }, unique: true }),
+        expect.objectContaining({ key: { createdAt: -1, _id: -1 } }),
+        expect.objectContaining({
+          key: { specialization: 1, createdAt: -1 },
+          collation: expect.objectContaining({ locale: "en", strength: 2 }),
+        }),
+        expect.objectContaining({
+          key: { hospital: 1, createdAt: -1 },
+          collation: expect.objectContaining({ locale: "en", strength: 2 }),
+        }),
+      ]),
+    );
   });
 });

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 import { env } from "../config/env.js";
 import { AdminModel } from "../models/admin.model.js";
+import { DoctorModel } from "../models/doctor.model.js";
 import { SessionModel } from "../models/session.model.js";
 
 export async function connectDatabase(): Promise<void> {
@@ -9,7 +10,11 @@ export async function connectDatabase(): Promise<void> {
 }
 
 export async function createIndexes(): Promise<void> {
-  await Promise.all([AdminModel.createIndexes(), SessionModel.createIndexes()]);
+  await Promise.all([
+    AdminModel.createIndexes(),
+    SessionModel.createIndexes(),
+    DoctorModel.createIndexes(),
+  ]);
 }
 
 export async function pingDatabase(): Promise<boolean> {
