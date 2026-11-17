@@ -35,7 +35,9 @@ describe("mongoose bootstrap", () => {
     await expect(createIndexes()).resolves.toBeUndefined();
 
     const { DoctorModel } = await import("../../src/models/doctor.model.js");
+    const { PatientModel } = await import("../../src/models/patient.model.js");
     const indexes = await DoctorModel.listIndexes();
+    const patientIndexes = await PatientModel.listIndexes();
     expect(indexes).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ key: { email: 1 }, unique: true }),
@@ -47,6 +49,22 @@ describe("mongoose bootstrap", () => {
         expect.objectContaining({
           key: { hospital: 1, createdAt: -1 },
           collation: expect.objectContaining({ locale: "en", strength: 2 }),
+        }),
+      ]),
+    );
+    expect(patientIndexes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: { doctorId: 1, registeredAt: -1, _id: -1 },
+          partialFilterExpression: { deletedAt: null },
+        }),
+        expect.objectContaining({
+          key: { registeredAt: -1, _id: -1 },
+          partialFilterExpression: { deletedAt: null },
+        }),
+        expect.objectContaining({
+          key: { condition: 1, registeredAt: -1 },
+          partialFilterExpression: { deletedAt: null },
         }),
       ]),
     );

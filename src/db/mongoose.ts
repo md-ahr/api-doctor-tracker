@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { env } from "../config/env.js";
 import { AdminModel } from "../models/admin.model.js";
 import { DoctorModel } from "../models/doctor.model.js";
+import { PatientModel } from "../models/patient.model.js";
 import { SessionModel } from "../models/session.model.js";
 
 export async function connectDatabase(): Promise<void> {
@@ -14,6 +15,7 @@ export async function createIndexes(): Promise<void> {
     AdminModel.createIndexes(),
     SessionModel.createIndexes(),
     DoctorModel.createIndexes(),
+    PatientModel.createIndexes(),
   ]);
 }
 
