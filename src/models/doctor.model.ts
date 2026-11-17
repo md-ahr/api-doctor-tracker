@@ -64,6 +64,23 @@ export async function findByEmail(email: string): Promise<Doctor | null> {
   return doc ? toDoctor(doc) : null;
 }
 
+export async function count(): Promise<number> {
+  return DoctorModel.countDocuments();
+}
+
+export async function listSummaries(): Promise<
+  Array<{ id: string; name: string; specialization: string }>
+> {
+  const docs = await DoctorModel.find({})
+    .select("name specialization")
+    .lean<Array<Pick<DoctorRecord, "_id" | "name" | "specialization">>>();
+  return docs.map((doc) => ({
+    id: doc._id.toString(),
+    name: doc.name,
+    specialization: doc.specialization,
+  }));
+}
+
 export async function findByIds(ids: string[]) {
   const validIds = ids.filter((id) => mongoose.isValidObjectId(id));
   const docs = await DoctorModel.find({ _id: { $in: validIds } })
