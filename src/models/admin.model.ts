@@ -29,6 +29,19 @@ export async function create(input: {
   };
 }
 
+export async function findById(id: string) {
+  if (!mongoose.isValidObjectId(id)) return null;
+  const doc = await AdminModel.findById(id).lean();
+  if (!doc) return null;
+  return {
+    id: doc._id.toString(),
+    name: doc.name,
+    email: doc.email,
+    role: "admin" as const,
+    passwordHash: doc.passwordHash,
+  };
+}
+
 export async function findByEmail(email: string) {
   const doc = await AdminModel.findOne({ email: email.toLowerCase() }).lean();
   if (!doc) return null;

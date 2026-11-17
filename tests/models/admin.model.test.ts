@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { isDuplicateKeyError } from "../../src/lib/errors.js";
-import { AdminModel, create, findByEmail } from "../../src/models/admin.model.js";
+import { AdminModel, create, findByEmail, findById } from "../../src/models/admin.model.js";
 
 const admin = {
   name: "Ada Lovelace",
@@ -53,6 +53,18 @@ describe("admin model", () => {
     await create(admin);
 
     await expect(create({ ...admin, name: "Augusta" })).rejects.toSatisfy(isDuplicateKeyError);
+  });
+
+  it("returns the admin by id and null when the id is missing", async () => {
+    const created = await create(admin);
+
+    expect(await findById(created.id)).toMatchObject({
+      id: created.id,
+      email: "ada@example.com",
+      passwordHash: admin.passwordHash,
+    });
+    expect(await findById("665f1c0a2b3c4d5e6f708192")).toBeNull();
+    expect(await findById("not-an-id")).toBeNull();
   });
 
   it("returns null from findByEmail when the admin is missing", async () => {

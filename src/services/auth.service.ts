@@ -15,6 +15,23 @@ function hashRefreshToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+async function openSession(admin: { id: string; email: string; name: string; role: "admin" }) {
+  const refreshToken = randomBytes(32).toString("hex");
+  await sessionModel.create({
+    adminId: admin.id,
+    tokenHash: hashRefreshToken(refreshToken),
+    expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
+  });
+
+  const access = issueAccessToken(admin);
+  return {
+    accessToken: access.token,
+    expiresIn: access.expiresIn,
+    refreshToken,
+    admin: { id: admin.id, name: admin.name, email: admin.email },
+  };
+}
+
 export async function login(input: { email: string; password: string }) {
   const email = input.email.trim().toLowerCase();
   const admin = await adminModel.findByEmail(email);
@@ -26,24 +43,35 @@ export async function login(input: { email: string; password: string }) {
     throw new DomainError("INVALID_CREDENTIALS");
   }
 
-  const refreshToken = randomBytes(32).toString("hex");
-  await sessionModel.create({
-    adminId: admin.id,
-    tokenHash: hashRefreshToken(refreshToken),
-    expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
-  });
+  return openSession(admin);
+}
 
-  const access = issueAccessToken({
-    id: admin.id,
-    email: admin.email,
-    name: admin.name,
-    role: admin.role,
-  });
+export async function refreshSession(refreshToken: string) {
+  const session = await sessionModel.findLiveByHash(hashRefreshToken(refreshToken), new Date());
+  if (!session) {
+    throw new DomainError("UNAUTHENTICATED");
+  }
 
-  return {
-    accessToken: access.token,
-    expiresIn: access.expiresIn,
-    refreshToken,
-    admin: { id: admin.id, name: admin.name, email: admin.email },
-  };
+  const admin = await adminModel.findById(session.adminId);
+  await sessionModel.revoke(session.id, new Date());
+  if (!admin) {
+    throw new DomainError("UNAUTHENTICATED");
+  }
+
+  return openSession(admin);
+}
+
+export async function logout(refreshToken: string | undefined): Promise<void> {
+  if (!refreshToken) return;
+  const session = await sessionModel.findLiveByHash(hashRefreshToken(refreshToken), new Date());
+  if (!session) return;
+  await sessionModel.revoke(session.id, new Date());
+}
+
+export async function getMe(adminId: string) {
+  const admin = await adminModel.findById(adminId);
+  if (!admin) {
+    throw new DomainError("UNAUTHENTICATED");
+  }
+  return { id: admin.id, name: admin.name, email: admin.email };
 }
