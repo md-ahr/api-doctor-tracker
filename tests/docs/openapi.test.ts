@@ -57,21 +57,72 @@ describe("openapi document", () => {
     });
   });
 
+  it("groups operations into health, auth, doctors, patients, and dashboard", () => {
+    const paths = document.paths ?? {};
+
+    expect(document.tags?.map((tag) => tag.name)).toEqual([
+      "Health",
+      "Auth",
+      "Doctors",
+      "Patients",
+      "Dashboard",
+    ]);
+    expect(paths["/api/v1/health"]?.get?.tags).toEqual(["Health"]);
+    expect(paths["/api/v1/auth/login"]?.post?.tags).toEqual(["Auth"]);
+    expect(paths["/api/v1/auth/refresh"]?.post?.tags).toEqual(["Auth"]);
+    expect(paths["/api/v1/auth/logout"]?.post?.tags).toEqual(["Auth"]);
+    expect(paths["/api/v1/auth/me"]?.get?.tags).toEqual(["Auth"]);
+    expect(paths["/api/v1/doctors"]?.get?.tags).toEqual(["Doctors"]);
+    expect(paths["/api/v1/doctors"]?.post?.tags).toEqual(["Doctors"]);
+    expect(paths["/api/v1/doctors/facets"]?.get?.tags).toEqual(["Doctors"]);
+    expect(paths["/api/v1/doctors/{doctorId}"]?.get?.tags).toEqual(["Doctors"]);
+    expect(paths["/api/v1/doctors/{doctorId}"]?.patch?.tags).toEqual(["Doctors"]);
+    expect(paths["/api/v1/doctors/{doctorId}/patients"]?.get?.tags).toEqual(["Patients"]);
+    expect(paths["/api/v1/doctors/{doctorId}/patients"]?.post?.tags).toEqual(["Patients"]);
+    expect(paths["/api/v1/patients"]?.get?.tags).toEqual(["Patients"]);
+    expect(paths["/api/v1/patients"]?.post?.tags).toEqual(["Patients"]);
+    expect(paths["/api/v1/patients/{patientId}"]?.get?.tags).toEqual(["Patients"]);
+    expect(paths["/api/v1/patients/{patientId}"]?.patch?.tags).toEqual(["Patients"]);
+    expect(paths["/api/v1/patients/{patientId}"]?.delete?.tags).toEqual(["Patients"]);
+    expect(paths["/api/v1/dashboard"]?.get?.tags).toEqual(["Dashboard"]);
+  });
+
   it("reuses the shared envelopes and documents the refresh cookie", () => {
     const refresh = document.paths?.["/api/v1/auth/refresh"]?.post;
     const serialized = JSON.stringify(refresh);
+    const schemas = document.components?.schemas ?? {};
 
-    expect(document.components?.responses).toHaveProperty("ErrorEnvelope");
-    expect(document.components?.schemas).toEqual(
+    expect(schemas).toEqual(
       expect.objectContaining({
-        SuccessEnvelope: expect.any(Object),
-        ListEnvelope: expect.any(Object),
+        Admin: expect.any(Object),
+        AuthSession: expect.any(Object),
+        Doctor: expect.any(Object),
+        DoctorDetail: expect.any(Object),
+        DoctorFacets: expect.any(Object),
+        Patient: expect.any(Object),
+        Dashboard: expect.any(Object),
+        HealthStatus: expect.any(Object),
+        PageMeta: expect.any(Object),
+        ErrorEnvelope: expect.any(Object),
+        LoginRequest: expect.any(Object),
+        CreateDoctorRequest: expect.any(Object),
+        CreatePatientRequest: expect.any(Object),
+        UpdatePatientRequest: expect.any(Object),
       }),
     );
     expect(serialized).toContain("dt_refresh");
-    expect(JSON.stringify(document.components?.schemas?.ListEnvelope)).toContain("totalPages");
+    expect(JSON.stringify(schemas.PageMeta)).toContain("totalPages");
+    expect(JSON.stringify(schemas.DoctorDetail)).toContain("activePatientCount");
+    expect(JSON.stringify(schemas.Patient)).toContain("doctorName");
+    expect(JSON.stringify(schemas.ErrorEnvelope)).toContain("VALIDATION_ERROR");
     expect(JSON.stringify(document.paths?.["/api/v1/doctors"]?.get?.responses?.["200"])).toContain(
-      "ListEnvelope",
+      "DoctorListResponse",
     );
+    expect(
+      JSON.stringify(document.paths?.["/api/v1/auth/login"]?.post?.responses?.["200"]),
+    ).toContain("AuthSessionResponse");
+    expect(
+      JSON.stringify(document.paths?.["/api/v1/auth/login"]?.post?.responses?.["401"]),
+    ).toContain("ErrorEnvelope");
   });
 });
