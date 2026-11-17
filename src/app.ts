@@ -9,6 +9,7 @@ import { sendFailure } from "./lib/response.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requestId } from "./middleware/request-id.js";
 import { authRouter } from "./routes/auth.routes.js";
+import { doctorRouter } from "./routes/doctor.routes.js";
 import { healthRouter } from "./routes/health.routes.js";
 
 export function createApp() {
@@ -36,6 +37,7 @@ export function createApp() {
   app.use(express.json({ limit: "16kb" }));
   app.use("/api/v1/health", healthRouter);
   app.use("/api/v1/auth", authRouter);
+  app.use("/api/v1/doctors", doctorRouter);
   app.use((_req, res) => {
     sendFailure(res, 404, "Route not found", "VALIDATION_ERROR", []);
   });
