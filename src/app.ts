@@ -4,6 +4,7 @@ import helmet from "helmet";
 import { pinoHttp } from "pino-http";
 
 import { env } from "./config/env.js";
+import { swaggerRouter } from "./docs/swagger.js";
 import { logger } from "./lib/logger.js";
 import { sendFailure } from "./lib/response.js";
 import { errorHandler } from "./middleware/error-handler.js";
@@ -37,6 +38,7 @@ export function createApp() {
     }),
   );
   app.use(express.json({ limit: "16kb" }));
+  app.use("/api/docs", swaggerRouter);
   app.use("/api/v1/health", healthRouter);
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/doctors", doctorRouter);
