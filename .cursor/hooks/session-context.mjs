@@ -11,7 +11,7 @@ const context = [
   "Doctor Tracker API (Express, MongoDB, Zod).",
   `Contract: ${contractPath("lld.md")}, ${contractPath("backend-structure.md")}.`,
   `Next task: lowest unchecked item in ${contractPath("backend-tasks.md")}. One task, then its tests.`,
-  "Layers: route calls one service; service throws DomainError; model returns lean objects.",
+  "Layers: route wires middleware; controller calls one service and writes the envelope; service throws DomainError; model returns lean objects.",
   "NodeNext imports end in .js. Calendar goes through lib/calendar.ts (Temporal).",
   "Use the context7 MCP for library APIs. Use the mongodb MCP read-only.",
   "If the LLD does not state a field, status, message, or error code, stop. No any, ts-ignore, TODO, empty catch, or invented code.",

@@ -1,5 +1,5 @@
 ---
-description: Route, service, and model boundaries for the Express API
+description: Route, controller, service, and model boundaries for the Express API
 globs: "{src,api/src}/**/*.ts"
 alwaysApply: false
 ---
@@ -7,28 +7,31 @@ alwaysApply: false
 # Layers
 
 ```text
-middleware → route → service → model → MongoDB
+middleware → route → controller → service → model → MongoDB
 ```
 
 | File | May import | Must not import |
 | --- | --- | --- |
-| `routes/*` | matching service, schemas, middleware, `lib/response` | models |
-| `auth.service.ts` | `admin.model`, `session.model`, `lib` | doctor, patient, or dashboard files |
-| `doctor.service.ts` | `doctor.model`, `patient.model` count functions, `lib` | `patient.service`, auth |
-| `patient.service.ts` | `patient.model`, `doctor.model.findById` and `findByIds`, `lib` | `doctor.service`, auth |
+| `routes/*` | matching controller, schemas, middleware | models, services |
+| `controllers/*` | matching service, `lib/response`, `lib/errors`, `config/env` | models |
+| `auth.service.ts` | `admin.model`, `session.model`, `lib` | doctor, patient, or dashboard files, Express |
+| `doctor.service.ts` | `doctor.model`, `patient.model` count functions, `lib` | `patient.service`, auth, Express |
+| `patient.service.ts` | `patient.model`, `doctor.model.findById` and `findByIds`, `lib` | `doctor.service`, auth, Express |
 | `dashboard.service.ts` | doctor and patient model query functions, `lib` | other services, Express |
-| `models/*` | `mongoose` | services, routes, Express |
+| `models/*` | `mongoose` | services, controllers, routes, Express |
 | `middleware/require-admin.ts` | `lib/tokens`, `lib/errors` | models |
 
-`GET /doctors/:doctorId/patients` is the one route that calls `patient.service` from the doctor router. The doctor service does not import the patient service.
+A route declares the path and middleware, then hands off to a controller. A controller reads validated input, calls one service function, and writes one response helper. It does not catch `DomainError`. Refresh clears `dt_refresh` and then rethrows. `async-handler` on the route forwards rejections to `error-handler`.
 
-A handler is validated input, one service call, one response helper. It does not catch `DomainError`. `async-handler` forwards to `error-handler`.
+`GET /doctors/:doctorId/patients` is declared on the doctor router. Its controller calls `patient.service`. The doctor service does not import the patient service. Health has no service; `health.controller.ts` calls `pingDatabase`.
 
 ```typescript
-export const create = asyncHandler(async (req, res) => {
-  const doctor = await createDoctor(req.body);
+doctorRouter.post("/", validate({ body: createDoctorBodySchema }), asyncHandler(create));
+
+export async function create(_req: Request, res: Response): Promise<void> {
+  const doctor = await doctorService.createDoctor(res.locals.body as CreateDoctorBody);
   sendData(res, 201, "Doctor created successfully", doctor);
-});
+}
 ```
 
-Relative imports use the `.js` suffix. Named exports. Services and models are async functions, not classes. `app.ts` mounts routers and does not inject repositories.
+Relative imports use the `.js` suffix. Named exports. Controllers, services, and models are async functions, not classes. `app.ts` mounts routers and does not inject repositories.

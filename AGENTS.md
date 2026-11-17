@@ -22,8 +22,8 @@ If this repository is `api/` inside the contract workspace, those files live in 
 
 ## Non-negotiables
 
-- Layers: middleware → route → service → model. Routes do not import models. Services do not import services.
-- Services throw `DomainError`. Routes write the JSON envelope from `lib/response.ts`.
+- Layers: middleware → route → controller → service → model. Routes do not import services or models. Controllers do not import models. Services do not import services or Express.
+- Services throw `DomainError`. Controllers write the JSON envelope from `lib/response.ts`.
 - Node.js 22, TypeScript strict, NodeNext ESM, `.js` suffixes on relative imports.
 - Calendar dates use `lib/calendar.ts` (Temporal). No Luxon, date-fns, or Day.js.
 - Models use `autoIndex: false` and return `.lean()` objects. Startup calls `createIndexes()`, not `syncIndexes()`.

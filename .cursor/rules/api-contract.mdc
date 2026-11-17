@@ -1,6 +1,6 @@
 ---
 description: JSON envelope, Zod validation, and DomainError codes
-globs: "{src,api/src}/{routes,schemas,lib,middleware,docs}/**/*.ts"
+globs: "{src,api/src}/{routes,controllers,schemas,lib,middleware,docs}/**/*.ts"
 alwaysApply: false
 ---
 

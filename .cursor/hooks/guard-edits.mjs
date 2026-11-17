@@ -56,8 +56,8 @@ const ERROR_CODES = new Set([
 
 const HTTP_STATUS = new Set([200, 201, 400, 401, 403, 404, 409, 429, 500, 503]);
 
-if (/\/controllers\//.test(path) || /\/(domain|application|infrastructure|interface)\//.test(path)) {
-  deny("Keep the three layers in routes, services, and models. Do not add controllers or a clean-architecture tree.");
+if (/\/(domain|application|infrastructure|interface)\//.test(path)) {
+  deny("Do not add a domain, application, infrastructure, or interface tree.");
   process.exit(0);
 }
 

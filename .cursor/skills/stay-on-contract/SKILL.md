@@ -18,6 +18,6 @@ Name the missing contract line in the reply. Do not fill it with a reasonable de
 
 ## When to write
 
-Write only the behavior the task and the LLD both state. Match the layer sample in `docs/backend-structure.md`. A service throws a code from the fixed set. A route uses the message the LLD gives.
+Write only the behavior the task and the LLD both state. Match the layer sample in `docs/backend-structure.md`. A service throws a code from the fixed set. A controller uses the message the LLD gives.
 
 Query Context7 for the signature, then follow the project rule in `skills/api-libraries/reference.md`.
