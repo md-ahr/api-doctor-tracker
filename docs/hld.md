@@ -372,14 +372,14 @@ flowchart LR
   Render --> Atlas[(Atlas MongoDB)]
 ```
 
-| Env                                           | Used by  | Purpose                         |
-| --------------------------------------------- | -------- | ------------------------------- |
-| `NEXT_PUBLIC_API_URL`                         | Web      | Public API origin               |
-| `MONGODB_URI`                                 | API      | Atlas connection                |
-| `JWT_ACCESS_SECRET`                           | API      | Access-token signing            |
-| `FRONTEND_ORIGIN`                             | API      | CORS and cookie-origin check    |
-| `APP_TIMEZONE`                                | API      | Calendar buckets. Default `UTC` |
-| `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | API seed | Initial admin                   |
+| Env                                           | Used by  | Purpose                                          |
+| --------------------------------------------- | -------- | ------------------------------------------------ |
+| `NEXT_PUBLIC_API_URL`                         | Web      | Public API origin                                |
+| `MONGODB_URI`                                 | API      | Atlas connection                                 |
+| `JWT_ACCESS_SECRET`                           | API      | Access-token signing                             |
+| `FRONTEND_ORIGIN`                             | API      | Comma-separated CORS and cookie-origin allowlist |
+| `APP_TIMEZONE`                                | API      | Calendar buckets. Default `UTC`                  |
+| `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | API seed | Initial admin                                    |
 
 The API does not read request-specific state from memory. Render can replace the instance without migrating sessions. Atlas M0 is enough for the interview data size. Health checks hit `GET /health`.
 

@@ -83,10 +83,10 @@ describe("auth routes", () => {
     expect(refreshSession).not.toHaveBeenCalled();
   });
 
-  it("refreshes when Origin matches FRONTEND_ORIGIN", async () => {
+  it("refreshes when Origin matches the FRONTEND_ORIGIN allowlist", async () => {
     const response = await fetch(`${url}/api/v1/auth/refresh`, {
       method: "POST",
-      headers: { origin: env.FRONTEND_ORIGIN, cookie: "dt_refresh=old-token" },
+      headers: { origin: env.FRONTEND_ORIGINS[0], cookie: "dt_refresh=old-token" },
     });
 
     expect(response.status).toBe(200);
@@ -98,7 +98,7 @@ describe("auth routes", () => {
 
     const response = await fetch(`${url}/api/v1/auth/refresh`, {
       method: "POST",
-      headers: { origin: env.FRONTEND_ORIGIN, cookie: "dt_refresh=old-token" },
+      headers: { origin: env.FRONTEND_ORIGINS[0], cookie: "dt_refresh=old-token" },
     });
     const body = (await response.json()) as { error: { code: string } };
 
@@ -136,7 +136,7 @@ describe("auth routes", () => {
 
     const refresh = await fetch(`${url}/api/v1/auth/refresh`, {
       method: "POST",
-      headers: { origin: env.FRONTEND_ORIGIN, cookie: "dt_refresh=old-token" },
+      headers: { origin: env.FRONTEND_ORIGINS[0], cookie: "dt_refresh=old-token" },
     });
     expect(refresh.status).toBe(200);
   });

@@ -12,7 +12,7 @@ Refresh cookie `dt_refresh`: 32 random bytes, hex. Store only the SHA-256 hex di
 
 Login: normalize email. If the admin is missing, verify against a dummy hash, then throw `INVALID_CREDENTIALS`. Login rate limit is 10 requests per 15 minutes per IP, on `POST /auth/login` only.
 
-Refresh requires the cookie and `Origin === FRONTEND_ORIGIN`. Revoke the current session, then create the next one. Logout revokes a live session when one exists and still returns success.
+Refresh requires the cookie and an `Origin` that matches one of the comma-separated `FRONTEND_ORIGIN` allowlist entries. Revoke the current session, then create the next one. Logout revokes a live session when one exists and still returns success.
 
 `requireAdmin` verifies the bearer token, rejects any role other than `admin` with `FORBIDDEN`, and sets `req.admin`. It sits on doctor, patient, and dashboard routers, and on `GET /auth/me`.
 

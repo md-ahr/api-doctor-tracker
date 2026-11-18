@@ -32,7 +32,7 @@ The API runs as a **Cloudflare Container** (Node 22 + Express) behind a **Worker
    npx wrangler secret put LOG_LEVEL
    ```
 
-   `JWT_ACCESS_SECRET` must be at least 32 characters. `FRONTEND_ORIGIN` is the live portal URL with **no** trailing slash (CORS and refresh cookies). Paste the same Atlas URI you use in `.env` for local dev.
+   `JWT_ACCESS_SECRET` must be at least 32 characters. `FRONTEND_ORIGIN` is a comma-separated allowlist of portal origins with **no** trailing slash (CORS and refresh cookies), for example `http://localhost:3000,https://task-doctor-tracker.vercel.app`. Paste the same Atlas URI you use in `.env` for local dev.
 
 3. In **MongoDB Atlas → Network Access**, allow the API to connect from the internet. For Cloudflare Containers, **Allow access from anywhere** (`0.0.0.0/0`) is the usual choice because egress IPs are not fixed. Restrict by IP only if you know the egress pattern you need.
 
@@ -57,7 +57,51 @@ The first deploy builds the Docker image and can take several minutes. The `*.wo
 
 If Wrangler reports that the Container application settings were not fully applied, re-run the same command. The retry is idempotent and finishes the deployment; CI retries once automatically.
 
-Set `FRONTEND_ORIGIN` with `wrangler secret put`, never as a dashboard variable. `wrangler deploy` replaces dashboard variables with the local configuration, so a variable created in the dashboard is removed on the next deploy and the container exits at boot because `src/config/env.ts` requires it.
+Set `FRONTEND_ORIGIN` (comma-separated when you need both local and production) with `wrangler secret put`, never as a dashboard variable. `wrangler deploy` replaces dashboard variables with the local configuration, so a variable created in the dashboard is removed on the next deploy and the container exits at boot because `src/config/env.ts` requires it.
+
+### Change or rotate a secret
+
+A secret write updates the Worker binding only. The container reads its environment once, in `containerEnv()`, when `container.start()` runs, so a running container keeps the old value until it is restarted.
+
+1. Write the secret (no surrounding quotes — Wrangler stores the bytes you type, quotes included):
+
+   ```bash
+   npx wrangler secret put FRONTEND_ORIGIN
+   # paste: http://localhost:3000,https://task-doctor-tracker.vercel.app
+   ```
+
+   Non-interactive:
+
+   ```bash
+   printf %s "http://localhost:3000,https://task-doctor-tracker.vercel.app" \
+     | npx wrangler secret put FRONTEND_ORIGIN
+   ```
+
+2. Restart the container so it boots with the new value. Redeploy:
+
+   ```bash
+   npx wrangler deploy
+   ```
+
+   Without a redeploy, the container stops after 5 minutes of no traffic (`INACTIVITY_TIMEOUT_MS`) and the next request starts it with the current secrets.
+
+3. Confirm. Names only — values are never printed:
+
+   ```bash
+   npx wrangler secret list
+   ```
+
+   Then check the CORS echo for the new origin:
+
+   ```bash
+   curl -s -D - -o /dev/null -H "Origin: https://task-doctor-tracker.vercel.app" \
+     "https://doctor-tracker-api.<your-subdomain>.workers.dev/api/v1/health" \
+     | grep -i access-control
+   ```
+
+   `access-control-allow-origin` must echo the origin you sent. An origin left out of the list gets no CORS header, and `POST /api/v1/auth/refresh` answers `403`.
+
+`CI` deploys the Worker but never writes secrets, so a push to `main` keeps whatever you set here. Updating `.dev.vars` affects `wrangler dev` only.
 
 Check:
 
@@ -115,7 +159,7 @@ Optional: create a GitHub **environment** named `production` for deploy approval
 
 Set once on the Worker (`wrangler secret put` or dashboard). Deploy reuses them; CI does not overwrite them unless you add extra steps:
 
-- `MONGODB_URI`, `JWT_ACCESS_SECRET`, `FRONTEND_ORIGIN` (and optional `APP_TIMEZONE`, `LOG_LEVEL`)
+- `MONGODB_URI`, `JWT_ACCESS_SECRET`, `FRONTEND_ORIGIN` (comma-separated allowlist; and optional `APP_TIMEZONE`, `LOG_LEVEL`)
 
 ## Frontend on Cloudflare
 

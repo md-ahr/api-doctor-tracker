@@ -1,5 +1,5 @@
 MONGODB_URI="mongodb+srv://user:pass@cluster.example.mongodb.net/doctor_tracker"
 JWT_ACCESS_SECRET="use-at-least-32-random-characters-here"
-FRONTEND_ORIGIN="http://localhost:3000"
+FRONTEND_ORIGIN="http://localhost:3000,https://task-doctor-tracker.vercel.app"
 APP_TIMEZONE="Asia/Dhaka"
 LOG_LEVEL="info"

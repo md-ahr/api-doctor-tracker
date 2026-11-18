@@ -5,7 +5,7 @@ Query Context7 for the current function signature. The rows below are how this c
 | Package | Project rule |
 | --- | --- |
 | `express` | `app.ts` order: request id, pino-http, helmet, CORS, JSON 16 KB, login rate limit, Swagger, `/api/v1` routers, 404, error handler |
-| `cors` | `origin: FRONTEND_ORIGIN`, `credentials: true`, methods `GET, POST, PATCH, DELETE`, headers `Authorization, Content-Type` |
+| `cors` | `origin: FRONTEND_ORIGINS` (comma-separated env allowlist), `credentials: true`, methods `GET, POST, PATCH, DELETE`, headers `Authorization, Content-Type` |
 | `helmet` | Default helmet on the app. No custom CSP work in this build |
 | `express-rate-limit` | `POST /auth/login` only. 10 per 15 minutes per IP. Handler responds `429` / `RATE_LIMITED` |
 | `mongoose` | `autoIndex: false`. Queries in model files. `.lean()`. Duplicate key `11000` mapped in the doctor service |
@@ -27,7 +27,7 @@ Query Context7 for the current function signature. The rows below are how this c
 
 ## Environment keys
 
-`MONGODB_URI`, `JWT_ACCESS_SECRET`, `FRONTEND_ORIGIN`, `PORT` (4000), `NODE_ENV`, `APP_TIMEZONE` (UTC), `LOG_LEVEL` (info), and seed-only `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`. Ship them empty in `.env.example`.
+`MONGODB_URI`, `JWT_ACCESS_SECRET`, `FRONTEND_ORIGIN` (comma-separated allowlist), `PORT` (4000), `NODE_ENV`, `APP_TIMEZONE` (UTC), `LOG_LEVEL` (info), and seed-only `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`. Ship them empty in `.env.example`.
 
 ## Context7 queries that pay off
 

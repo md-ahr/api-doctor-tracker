@@ -24,7 +24,7 @@ describe("parseEnv", () => {
 
     expect(env.MONGODB_URI).toBe(validEnv.MONGODB_URI);
     expect(env.JWT_ACCESS_SECRET).toBe(validEnv.JWT_ACCESS_SECRET);
-    expect(env.FRONTEND_ORIGIN).toBe(validEnv.FRONTEND_ORIGIN);
+    expect(env.FRONTEND_ORIGINS).toEqual([validEnv.FRONTEND_ORIGIN]);
     expect(env.PORT).toBe(4000);
     expect(env.NODE_ENV).toBe("development");
     expect(env.APP_TIMEZONE).toBe("UTC");
@@ -45,6 +45,28 @@ describe("parseEnv", () => {
       parseEnv({
         ...validEnv,
         FRONTEND_ORIGIN: "http://localhost:3000/",
+      }),
+    ).toThrow();
+  });
+
+  it("parses a comma-separated origin allowlist", () => {
+    const env = parseEnv({
+      ...validEnv,
+      FRONTEND_ORIGIN:
+        "http://localhost:3000, https://task-doctor-tracker.vercel.app ,https://task-doctor-tracker.vercel.app",
+    });
+
+    expect(env.FRONTEND_ORIGINS).toEqual([
+      "http://localhost:3000",
+      "https://task-doctor-tracker.vercel.app",
+    ]);
+  });
+
+  it("rejects an allowlist where one origin has a trailing slash", () => {
+    expect(() =>
+      parseEnv({
+        ...validEnv,
+        FRONTEND_ORIGIN: "http://localhost:3000,https://task-doctor-tracker.vercel.app/",
       }),
     ).toThrow();
   });

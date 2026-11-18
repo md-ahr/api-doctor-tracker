@@ -55,7 +55,8 @@ export async function me(req: Request, res: Response): Promise<void> {
 }
 
 function assertFrontendOrigin(req: Request): void {
-  if (req.header("origin") !== env.FRONTEND_ORIGIN) {
+  const origin = req.header("origin");
+  if (!origin || !env.FRONTEND_ORIGINS.includes(origin)) {
     throw new DomainError("FORBIDDEN");
   }
 }

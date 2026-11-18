@@ -243,7 +243,7 @@ const refreshCookieSchema = z.object({
   dt_refresh: z.string().meta({ description: "Opaque refresh token" }),
 });
 const originHeaderSchema = z.object({
-  origin: z.string().meta({ description: "Must equal FRONTEND_ORIGIN" }),
+  origin: z.string().meta({ description: "Must match one of the FRONTEND_ORIGIN allowlist" }),
 });
 
 function json(description: string, schema: z.ZodType) {

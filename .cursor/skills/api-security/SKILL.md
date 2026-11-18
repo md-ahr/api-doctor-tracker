@@ -19,5 +19,5 @@ Read [reference.md](reference.md) for the pattern that matches the change. The L
 - `req.body` or `req.query` is passed through to a Mongoose filter.
 - Search text reaches a regex before `escapeRegex`.
 - `jwt.verify` omits `algorithms: ["HS256"]`.
-- Refresh or logout accepts the cookie without comparing `Origin` to `FRONTEND_ORIGIN`.
+- Refresh or logout accepts the cookie without checking `Origin` against the `FRONTEND_ORIGIN` allowlist.
 - A response or log includes `passwordHash`, `tokenHash`, the refresh token, or the access token.

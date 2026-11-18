@@ -15,7 +15,7 @@ const context = [
   "NodeNext imports end in .js. Calendar goes through lib/calendar.ts (Temporal).",
   "Use the context7 MCP for library APIs. Use the mongodb MCP read-only.",
   "If the LLD does not state a field, status, message, or error code, stop. No any, ts-ignore, TODO, empty catch, or invented code.",
-  "CSRF: Origin must match FRONTEND_ORIGIN on refresh and logout. No outbound fetch of a request URL. No $where. No secrets in JSON or logs.",
+  "CSRF: Origin must match the FRONTEND_ORIGIN allowlist on refresh and logout. No outbound fetch of a request URL. No $where. No secrets in JSON or logs.",
   "Do not log passwords, hashes, or tokens.",
   "After a task's edits, the stop hook runs format:check, lint, typecheck, unit tests, and build when those scripts exist. Commit with the commit guidelines only after that gate passes.",
 ].join(" ");

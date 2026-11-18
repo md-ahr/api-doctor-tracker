@@ -25,18 +25,18 @@ npm install
 
 In Atlas, create a database user and put the **SRV connection string** in `MONGODB_URI` (see `.env.example`). Allow your IP under **Network Access** for local dev, or use **Allow access from anywhere** (`0.0.0.0/0`) if you only run the API on Cloudflare and seed from your machine occasionally.
 
-Set every value in `.env` before `npm run dev`. `JWT_ACCESS_SECRET` must be at least 32 characters. `FRONTEND_ORIGIN` is the portal origin with no trailing slash. `APP_TIMEZONE` is an IANA name (`UTC` or `Asia/Dhaka`) used for calendar-day bounds.
+Set every value in `.env` before `npm run dev`. `JWT_ACCESS_SECRET` must be at least 32 characters. `FRONTEND_ORIGIN` is a comma-separated allowlist of portal origins with no trailing slash (`http://localhost:3000,https://task-doctor-tracker.vercel.app`). `APP_TIMEZONE` is an IANA name (`UTC` or `Asia/Dhaka`) used for calendar-day bounds.
 
-| Variable                                      | Role                                                          |
-| --------------------------------------------- | ------------------------------------------------------------- |
-| `MONGODB_URI`                                 | Atlas SRV connection string                                   |
-| `JWT_ACCESS_SECRET`                           | HMAC secret for the 15-minute access token                    |
-| `FRONTEND_ORIGIN`                             | Allowed CORS origin. Refresh and logout require this `Origin` |
-| `PORT`                                        | Listen port. Defaults to `4000`                               |
-| `NODE_ENV`                                    | `development`, `test`, or `production`                        |
-| `APP_TIMEZONE`                                | Timezone for `YYYY-MM-DD` windows. Defaults to `UTC`          |
-| `LOG_LEVEL`                                   | pino level. Defaults to `info`                                |
-| `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Required only for `npm run seed`                              |
+| Variable                                      | Role                                                                   |
+| --------------------------------------------- | ---------------------------------------------------------------------- |
+| `MONGODB_URI`                                 | Atlas SRV connection string                                            |
+| `JWT_ACCESS_SECRET`                           | HMAC secret for the 15-minute access token                             |
+| `FRONTEND_ORIGIN`                             | Comma-separated CORS allowlist. Refresh/logout `Origin` must match one |
+| `PORT`                                        | Listen port. Defaults to `4000`                                        |
+| `NODE_ENV`                                    | `development`, `test`, or `production`                                 |
+| `APP_TIMEZONE`                                | Timezone for `YYYY-MM-DD` windows. Defaults to `UTC`                   |
+| `LOG_LEVEL`                                   | pino level. Defaults to `info`                                         |
+| `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Required only for `npm run seed`                                       |
 
 `npm run seed` inserts that admin when the email is missing. Running it again does not create a second admin.
 
@@ -78,7 +78,7 @@ npm run deploy:cf
 
 ## Technical decisions
 
-**Access is a 15-minute HS256 JWT. The session is an opaque refresh token, stored as a hash and rotated on use.** The access token is returned in the JSON body. The refresh token is 32 random bytes, stored only as SHA-256, and set as `dt_refresh` (`HttpOnly`, `Secure`, `SameSite=None`, path `/api/v1/auth`). Refresh revokes the current session before it issues the next one, so a stolen cookie cannot be replayed after the legitimate client refreshes. Login always runs argon2id, including a fixed dummy hash when the email is missing, so timing does not reveal whether the account exists. Refresh and logout reject any `Origin` other than `FRONTEND_ORIGIN`. Login is limited to 10 attempts per 15 minutes.
+**Access is a 15-minute HS256 JWT. The session is an opaque refresh token, stored as a hash and rotated on use.** The access token is returned in the JSON body. The refresh token is 32 random bytes, stored only as SHA-256, and set as `dt_refresh` (`HttpOnly`, `Secure`, `SameSite=None`, path `/api/v1/auth`). Refresh revokes the current session before it issues the next one, so a stolen cookie cannot be replayed after the legitimate client refreshes. Login always runs argon2id, including a fixed dummy hash when the email is missing, so timing does not reveal whether the account exists. Refresh and logout reject any `Origin` not in the `FRONTEND_ORIGIN` allowlist. Login is limited to 10 attempts per 15 minutes.
 
 **One Zod schema is the runtime check and the published contract.** `validate` parses body, query, and params and puts the result on `res.locals`. Controllers do not parse again. The same schemas are registered with `zod-to-openapi` and served at `/api/docs`. A second, hand-written OpenAPI file would drift from what the server accepts. Services throw `DomainError`. One error handler writes the JSON envelope, so status codes and error codes stay in one place.
 

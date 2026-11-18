@@ -127,7 +127,7 @@ Apply this order in `app.ts`. Login rate limit is mounted only on `POST /auth/lo
 1. Request id (`x-request-id`, generated when absent)
 2. Structured request log
 3. `helmet`
-4. CORS: `FRONTEND_ORIGIN`, credentials, methods `GET, POST, PATCH, DELETE`
+4. CORS: origins from `FRONTEND_ORIGIN`, credentials, methods `GET, POST, PATCH, DELETE`
 5. JSON parser, limit 16 KB
 6. Login rate limit
 7. Swagger UI and the OpenAPI document (`/api/docs`, `/api/docs/openapi.json`)
@@ -270,13 +270,29 @@ import { z } from "zod";
 
 loadEnvFile();
 
-const envSchema = z.object({
+const frontendOriginSchema = z
+  .string()
+  .trim()
+  .min(1, "FRONTEND_ORIGIN is required")
+  .transform((value) => value.split(","))
+  .pipe(
+    z
+      .array(
+        z
+          .string()
+          .trim()
+          .min(1, "FRONTEND_ORIGIN contains an empty origin")
+          .url("Each FRONTEND_ORIGIN must be an absolute URL")
+          .refine((value) => !value.endsWith("/"), "No trailing slash"),
+      )
+      .min(1, "FRONTEND_ORIGIN is required")
+      .transform((origins) => [...new Set(origins)]),
+  );
+
+const envObjectSchema = z.object({
   MONGODB_URI: z.string().min(1),
   JWT_ACCESS_SECRET: z.string().min(32),
-  FRONTEND_ORIGIN: z
-    .string()
-    .url()
-    .refine((value) => !value.endsWith("/"), "No trailing slash"),
+  FRONTEND_ORIGIN: frontendOriginSchema,
   PORT: z.coerce.number().int().positive().default(4000),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   APP_TIMEZONE: z.string().min(1).default("UTC"),
@@ -285,6 +301,11 @@ const envSchema = z.object({
   ADMIN_EMAIL: z.string().trim().email().max(254).optional(),
   ADMIN_PASSWORD: z.string().min(8).optional(),
 });
+
+export const envSchema = envObjectSchema.transform(({ FRONTEND_ORIGIN, ...rest }) => ({
+  ...rest,
+  FRONTEND_ORIGINS: FRONTEND_ORIGIN,
+}));
 
 export const env = envSchema.parse(process.env);
 ```
@@ -844,7 +865,7 @@ export function createApp() {
   const app = express();
   app.use(requestId);
   app.use(helmet());
-  app.use(cors({ origin: env.FRONTEND_ORIGIN, credentials: true }));
+  app.use(cors({ origin: env.FRONTEND_ORIGINS, credentials: true }));
   app.use(express.json({ limit: "16kb" }));
   app.use("/api/docs", swaggerRouter);
   app.use("/api/v1/health", healthRouter);

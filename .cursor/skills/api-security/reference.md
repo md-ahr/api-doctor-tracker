@@ -4,7 +4,7 @@
 
 The access token is a bearer header, so a foreign site cannot attach it. The refresh cookie is `SameSite=None` because the portal and the API are different origins. That cookie is the CSRF target.
 
-Refresh and logout accept the cookie only when `Origin` equals `FRONTEND_ORIGIN`. Login sets the cookie. Logout clears it. Flags stay `HttpOnly`, `Secure`, `SameSite=None`, `Path=/api/v1/auth`.
+Refresh and logout accept the cookie only when `Origin` matches one entry in the comma-separated `FRONTEND_ORIGIN` allowlist. Login sets the cookie. Logout clears it. Flags stay `HttpOnly`, `Secure`, `SameSite=None`, `Path=/api/v1/auth`.
 
 Do not switch the cookie to `SameSite=Lax` to "fix" CSRF. Lax drops the cookie on the cross-site XHR this design needs. Do not skip the Origin check.
 
@@ -54,5 +54,5 @@ Never select `passwordHash` into a resource. Never log the bearer token, the coo
 | Path traversal | No user path is read from disk |
 | File upload | Not in the LLD |
 | Prototype merge | Do not `Object.assign` a document from `req.body` |
-| CORS `origin: true` | The origin is `FRONTEND_ORIGIN` only |
+| CORS `origin: true` | The origin must match one entry in the `FRONTEND_ORIGIN` allowlist |
 | Helmet removed | Leave the default helmet middleware in place |

@@ -75,7 +75,7 @@ describe("auth integration", () => {
 
     const refresh = await fetch(`${url}/api/v1/auth/refresh`, {
       method: "POST",
-      headers: { origin: env.FRONTEND_ORIGIN, cookie: firstCookie },
+      headers: { origin: env.FRONTEND_ORIGINS[0], cookie: firstCookie },
     });
     const refreshBody = (await refresh.json()) as {
       message: string;
@@ -94,7 +94,7 @@ describe("auth integration", () => {
 
     const logout = await fetch(`${url}/api/v1/auth/logout`, {
       method: "POST",
-      headers: { origin: env.FRONTEND_ORIGIN, cookie: rotatedCookie },
+      headers: { origin: env.FRONTEND_ORIGINS[0], cookie: rotatedCookie },
     });
     const logoutBody = (await logout.json()) as { success: boolean; data: unknown };
 
@@ -107,7 +107,7 @@ describe("auth integration", () => {
 
     const reused = await fetch(`${url}/api/v1/auth/refresh`, {
       method: "POST",
-      headers: { origin: env.FRONTEND_ORIGIN, cookie: rotatedCookie },
+      headers: { origin: env.FRONTEND_ORIGINS[0], cookie: rotatedCookie },
     });
     const reusedBody = (await reused.json()) as { error: { code: string } };
 
@@ -129,7 +129,7 @@ describe("auth integration", () => {
     const refresh = () =>
       fetch(`${url}/api/v1/auth/refresh`, {
         method: "POST",
-        headers: { origin: env.FRONTEND_ORIGIN, cookie },
+        headers: { origin: env.FRONTEND_ORIGINS[0], cookie },
       });
     const [first, second] = await Promise.all([refresh(), refresh()]);
 

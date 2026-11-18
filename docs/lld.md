@@ -325,7 +325,7 @@ Lifetime is 15 minutes. The secret is `JWT_ACCESS_SECRET`, algorithm HS256.
 
 #### `POST /auth/refresh`
 
-Cookie `dt_refresh` required. The `Origin` header must equal `FRONTEND_ORIGIN`. No bearer token.
+Cookie `dt_refresh` required. The `Origin` header must match one of the comma-separated origins in `FRONTEND_ORIGIN`. No bearer token.
 
 Response `200` uses the login response envelope (`success`, `message`: `"Session refreshed successfully"`, and the same `data` shape as login). It replaces the cookie. The presented session row is revoked atomically in the same update that consumes it, before the new one is written, so two concurrent refreshes cannot both rotate the same token. If the presented token is unknown, expired, or already revoked, the response is `401 UNAUTHENTICATED` and the cookie is left untouched: a concurrent refresh may have just rotated it, and clearing it here would destroy that browser's new token. The client clears its local session hint instead.
 
@@ -726,7 +726,7 @@ The repository interfaces above are the functions each model file exports. Servi
 1. Request id (`x-request-id`, generated when absent)
 2. Structured request log
 3. `helmet`
-4. CORS: origin `FRONTEND_ORIGIN`, credentials enabled, methods `GET,POST,PATCH,DELETE`, allowed headers `Authorization,Content-Type`
+4. CORS: origins from `FRONTEND_ORIGIN` (comma-separated), credentials enabled, methods `GET,POST,PATCH,DELETE`, allowed headers `Authorization,Content-Type`
 5. JSON parser, limit 16 KB
 6. Login rate limit on `POST /auth/login` only
 7. Router
@@ -811,18 +811,18 @@ The API does not depend on Next.js. The web app does not depend on Mongoose, `js
 
 API:
 
-| Variable            | Required | Rule                            |
-| ------------------- | -------- | ------------------------------- |
-| `MONGODB_URI`       | yes      | Mongo connection string         |
-| `JWT_ACCESS_SECRET` | yes      | At least 32 characters          |
-| `FRONTEND_ORIGIN`   | yes      | Exact origin, no trailing slash |
-| `PORT`              | no       | Default `4000`                  |
-| `NODE_ENV`          | no       | `development` or `production`   |
-| `APP_TIMEZONE`      | no       | IANA name, default `UTC`        |
-| `LOG_LEVEL`         | no       | pino level, default `info`      |
-| `ADMIN_NAME`        | seed     | Seed only                       |
-| `ADMIN_EMAIL`       | seed     | Seed only                       |
-| `ADMIN_PASSWORD`    | seed     | At least 8 characters           |
+| Variable            | Required | Rule                                       |
+| ------------------- | -------- | ------------------------------------------ |
+| `MONGODB_URI`       | yes      | Mongo connection string                    |
+| `JWT_ACCESS_SECRET` | yes      | At least 32 characters                     |
+| `FRONTEND_ORIGIN`   | yes      | Comma-separated origins, no trailing slash |
+| `PORT`              | no       | Default `4000`                             |
+| `NODE_ENV`          | no       | `development` or `production`              |
+| `APP_TIMEZONE`      | no       | IANA name, default `UTC`                   |
+| `LOG_LEVEL`         | no       | pino level, default `info`                 |
+| `ADMIN_NAME`        | seed     | Seed only                                  |
+| `ADMIN_EMAIL`       | seed     | Seed only                                  |
+| `ADMIN_PASSWORD`    | seed     | At least 8 characters                      |
 
 Web:
 

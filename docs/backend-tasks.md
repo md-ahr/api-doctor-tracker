@@ -179,7 +179,8 @@ These are useful and **not** part of Phase 0. Add them when the note says.
 
 - Valid minimal env object parses; `PORT` defaults to `4000`
 - `JWT_ACCESS_SECRET` shorter than 32 characters fails
-- `FRONTEND_ORIGIN` with trailing slash fails
+- `FRONTEND_ORIGIN` with a trailing slash fails (single value or any value in the comma-separated list)
+- `FRONTEND_ORIGIN` splits, trims, and deduplicates a comma-separated allowlist
 
 **Verify:** `npm test -- tests/config/env.test.ts`
 
@@ -585,7 +586,7 @@ These are useful and **not** part of Phase 0. Add them when the note says.
 **Unit test:** `api/tests/routes/auth.routes.test.ts` (supertest + memory Mongo or mocked service per path)
 
 - Login sets cookie attributes: `HttpOnly`, `Secure`, `SameSite=None`, path `/api/v1/auth`
-- Refresh requires `Origin: FRONTEND_ORIGIN`
+- Refresh accepts any Origin in the `FRONTEND_ORIGIN` allowlist and rejects others
 - `GET me` without bearer → 401
 
 **Verify:** `npm test -- tests/routes/auth.routes.test.ts`
