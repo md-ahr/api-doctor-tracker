@@ -40,3 +40,24 @@ export async function findLiveByHash(tokenHash: string, now: Date) {
 export async function revoke(id: string, revokedAt: Date): Promise<void> {
   await SessionModel.updateOne({ _id: id }, { $set: { revokedAt } });
 }
+
+/**
+ * Revoke and return a live session in one atomic update. Two concurrent
+ * refreshes that present the same token cannot both win, so rotation never
+ * forks into two live sessions.
+ */
+export async function consume(
+  tokenHash: string,
+  now: Date,
+): Promise<{ id: string; adminId: string } | null> {
+  const doc = await SessionModel.findOneAndUpdate(
+    { tokenHash, revokedAt: null, expiresAt: { $gt: now } },
+    { $set: { revokedAt: now } },
+    { returnDocument: "before" },
+  ).lean();
+  if (!doc) return null;
+  return {
+    id: doc._id.toString(),
+    adminId: doc.adminId.toString(),
+  };
+}

@@ -29,21 +29,16 @@ export async function login(_req: Request, res: Response): Promise<void> {
 export async function refresh(req: Request, res: Response): Promise<void> {
   assertFrontendOrigin(req);
   const refreshToken = readCookie(req.header("cookie"), REFRESH_COOKIE);
-  try {
-    if (!refreshToken) {
-      throw new DomainError("UNAUTHENTICATED");
-    }
-    const result = await authService.refreshSession(refreshToken);
-    res.cookie(REFRESH_COOKIE, result.refreshToken, refreshCookieOptions);
-    sendData(res, 200, "Session refreshed successfully", {
-      accessToken: result.accessToken,
-      expiresIn: result.expiresIn,
-      admin: result.admin,
-    });
-  } catch (error) {
-    clearRefreshCookie(res);
-    throw error;
+  if (!refreshToken) {
+    throw new DomainError("UNAUTHENTICATED");
   }
+  const result = await authService.refreshSession(refreshToken);
+  res.cookie(REFRESH_COOKIE, result.refreshToken, refreshCookieOptions);
+  sendData(res, 200, "Session refreshed successfully", {
+    accessToken: result.accessToken,
+    expiresIn: result.expiresIn,
+    admin: result.admin,
+  });
 }
 
 export async function logout(req: Request, res: Response): Promise<void> {

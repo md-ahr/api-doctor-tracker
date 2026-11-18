@@ -113,5 +113,31 @@ describe("auth integration", () => {
 
     expect(reused.status).toBe(401);
     expect(reusedBody.error.code).toBe("UNAUTHENTICATED");
+    expect(reused.headers.getSetCookie().some((value) => value.startsWith("dt_refresh="))).toBe(
+      false,
+    );
+  });
+
+  it("lets exactly one of two concurrent refreshes rotate a cookie", async () => {
+    const login = await fetch(`${url}/api/v1/auth/login`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email: "admin@example.com", password }),
+    });
+    const cookie = refreshCookie(login);
+
+    const refresh = () =>
+      fetch(`${url}/api/v1/auth/refresh`, {
+        method: "POST",
+        headers: { origin: env.FRONTEND_ORIGIN, cookie },
+      });
+    const [first, second] = await Promise.all([refresh(), refresh()]);
+
+    expect([first.status, second.status].sort()).toEqual([200, 401]);
+
+    const loser = first.status === 401 ? first : second;
+    expect(loser.headers.getSetCookie().some((value) => value.startsWith("dt_refresh="))).toBe(
+      false,
+    );
   });
 });

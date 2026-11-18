@@ -52,13 +52,12 @@ export async function login(input: { email: string; password: string }) {
 }
 
 export async function refreshSession(refreshToken: string) {
-  const session = await sessionModel.findLiveByHash(hashRefreshToken(refreshToken), new Date());
+  const session = await sessionModel.consume(hashRefreshToken(refreshToken), new Date());
   if (!session) {
     throw new DomainError("UNAUTHENTICATED");
   }
 
   const admin = await adminModel.findById(session.adminId);
-  await sessionModel.revoke(session.id, new Date());
   if (!admin) {
     throw new DomainError("UNAUTHENTICATED");
   }

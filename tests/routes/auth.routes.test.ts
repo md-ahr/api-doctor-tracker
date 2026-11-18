@@ -9,6 +9,7 @@ vi.mock("../../src/services/auth.service.js", () => ({
 }));
 
 import { env } from "../../src/config/env.js";
+import { DomainError } from "../../src/lib/errors.js";
 import { createApp } from "../../src/app.js";
 import { loginRateLimit } from "../../src/routes/auth.routes.js";
 import { login, refreshSession } from "../../src/services/auth.service.js";
@@ -90,6 +91,20 @@ describe("auth routes", () => {
 
     expect(response.status).toBe(200);
     expect(refreshSession).toHaveBeenCalledWith("old-token");
+  });
+
+  it("leaves the refresh cookie in place when a rotation loses a race", async () => {
+    vi.mocked(refreshSession).mockRejectedValueOnce(new DomainError("UNAUTHENTICATED"));
+
+    const response = await fetch(`${url}/api/v1/auth/refresh`, {
+      method: "POST",
+      headers: { origin: env.FRONTEND_ORIGIN, cookie: "dt_refresh=old-token" },
+    });
+    const body = (await response.json()) as { error: { code: string } };
+
+    expect(response.status).toBe(401);
+    expect(body.error.code).toBe("UNAUTHENTICATED");
+    expect(response.headers.getSetCookie()).toHaveLength(0);
   });
 
   it("returns 401 from GET me without a bearer token", async () => {

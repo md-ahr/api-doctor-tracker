@@ -2,7 +2,13 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { SessionModel, create, findLiveByHash, revoke } from "../../src/models/session.model.js";
+import {
+  SessionModel,
+  consume,
+  create,
+  findLiveByHash,
+  revoke,
+} from "../../src/models/session.model.js";
 
 const adminId = new mongoose.Types.ObjectId().toString();
 
@@ -66,5 +72,32 @@ describe("session model", () => {
     });
 
     expect(await findLiveByHash("expired", now)).toBeNull();
+  });
+
+  it("consumes a live session exactly once when two refreshes race", async () => {
+    const now = new Date();
+    await create({
+      adminId,
+      tokenHash: "race",
+      expiresAt: new Date(now.getTime() + 60_000),
+    });
+
+    const results = await Promise.all([consume("race", now), consume("race", now)]);
+
+    expect(results.filter((value) => value !== null)).toHaveLength(1);
+    expect(await consume("race", now)).toBeNull();
+    expect(await findLiveByHash("race", now)).toBeNull();
+  });
+
+  it("does not consume an unknown or expired session", async () => {
+    const now = new Date();
+    await create({
+      adminId,
+      tokenHash: "expired",
+      expiresAt: new Date(now.getTime() - 1_000),
+    });
+
+    expect(await consume("missing", now)).toBeNull();
+    expect(await consume("expired", now)).toBeNull();
   });
 });

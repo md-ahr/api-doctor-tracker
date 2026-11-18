@@ -7,6 +7,7 @@ vi.mock("../../src/models/user.model.js", () => ({
 
 vi.mock("../../src/models/session.model.js", () => ({
   create: vi.fn(),
+  consume: vi.fn(),
   findLiveByHash: vi.fn(),
   revoke: vi.fn(),
 }));
@@ -14,7 +15,12 @@ vi.mock("../../src/models/session.model.js", () => ({
 import { DomainError } from "../../src/lib/errors.js";
 import { verifyAccessToken } from "../../src/lib/tokens.js";
 import { findById } from "../../src/models/user.model.js";
-import { create as createSession, findLiveByHash, revoke } from "../../src/models/session.model.js";
+import {
+  consume,
+  create as createSession,
+  findLiveByHash,
+  revoke,
+} from "../../src/models/session.model.js";
 import { getMe, logout, refreshSession } from "../../src/services/auth.service.js";
 
 const admin = {
@@ -32,32 +38,29 @@ describe("auth session", () => {
     vi.clearAllMocks();
   });
 
-  it("rejects an unknown or revoked refresh token", async () => {
-    vi.mocked(findLiveByHash).mockResolvedValue(null);
+  it("rejects an unknown, expired, or already rotated refresh token", async () => {
+    vi.mocked(consume).mockResolvedValue(null);
 
     await expect(refreshSession("missing-token")).rejects.toMatchObject({
       code: "UNAUTHENTICATED",
     });
-    expect(revoke).not.toHaveBeenCalled();
     expect(createSession).not.toHaveBeenCalled();
   });
 
-  it("revokes the old session and returns new tokens", async () => {
-    vi.mocked(findLiveByHash).mockResolvedValue(liveSession);
+  it("consumes the old session atomically and returns new tokens", async () => {
+    vi.mocked(consume).mockResolvedValue(liveSession);
     vi.mocked(findById).mockResolvedValue(admin);
-    vi.mocked(revoke).mockResolvedValue(undefined);
     vi.mocked(createSession).mockResolvedValue(undefined);
 
     const result = await refreshSession("old-refresh-token");
 
-    expect(findLiveByHash).toHaveBeenCalledWith(
+    expect(consume).toHaveBeenCalledWith(
       createHash("sha256").update("old-refresh-token").digest("hex"),
       expect.any(Date),
     );
-    expect(vi.mocked(revoke).mock.invocationCallOrder[0]).toBeLessThan(
+    expect(vi.mocked(consume).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(createSession).mock.invocationCallOrder[0] ?? 0,
     );
-    expect(revoke).toHaveBeenCalledWith(liveSession.id, expect.any(Date));
     expect(result.refreshToken).toMatch(/^[a-f0-9]{64}$/);
     expect(result.refreshToken).not.toBe("old-refresh-token");
     expect(result.expiresIn).toBe(900);
@@ -72,12 +75,11 @@ describe("auth session", () => {
     });
   });
 
-  it("revokes the session and rejects refresh when the admin is gone", async () => {
-    vi.mocked(findLiveByHash).mockResolvedValue(liveSession);
+  it("rejects refresh when the admin is gone", async () => {
+    vi.mocked(consume).mockResolvedValue(liveSession);
     vi.mocked(findById).mockResolvedValue(null);
 
     await expect(refreshSession("old-refresh-token")).rejects.toBeInstanceOf(DomainError);
-    expect(revoke).toHaveBeenCalledWith(liveSession.id, expect.any(Date));
     expect(createSession).not.toHaveBeenCalled();
   });
 
