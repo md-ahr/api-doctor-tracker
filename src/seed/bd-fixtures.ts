@@ -132,7 +132,7 @@ export function doctorGivenName(index: number): string {
 }
 
 export function doctorFamilyName(index: number): string {
-  return FAMILY[(index * 7) % FAMILY.length]!;
+  return FAMILY[(index * 7 + Math.floor(index / GIVEN.length)) % FAMILY.length]!;
 }
 
 export function patientFullName(rng: () => number, index: number): string {

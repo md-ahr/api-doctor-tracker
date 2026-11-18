@@ -48,6 +48,9 @@ describe("seed demo clinic", () => {
     expect(sampleDoctor?.hospital).toMatch(/Dhaka|Hospital|Centre/i);
     expect(sampleDoctor?.phone).toMatch(/^\+880 /);
 
+    const doctorNames = await DoctorModel.distinct("name");
+    expect(doctorNames).toHaveLength(DEMO_DOCTOR_TARGET);
+
     const summaryAgain = await seedDemoClinic();
     expect(summaryAgain).toEqual({
       staffInserted: 0,
