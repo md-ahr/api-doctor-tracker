@@ -55,6 +55,10 @@ npm run deploy:cf
 
 The first deploy builds the Docker image and can take several minutes. The `*.workers.dev` URL may respond before container instances are ready; wait a few minutes if you see errors, then retry.
 
+If Wrangler reports that the Container application settings were not fully applied, re-run the same command. The retry is idempotent and finishes the deployment; CI retries once automatically.
+
+Set `FRONTEND_ORIGIN` with `wrangler secret put`, never as a dashboard variable. `wrangler deploy` replaces dashboard variables with the local configuration, so a variable created in the dashboard is removed on the next deploy and the container exits at boot because `src/config/env.ts` requires it.
+
 Check:
 
 ```bash
